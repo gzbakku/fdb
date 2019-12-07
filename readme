@@ -1,0 +1,9 @@
+
+
+git clone https://github.com/Microsoft/vcpkg.git
+cd vcpkg
+./bootstrap-vcpkg.bat
+#Add the current folder into PATH environment variable
+vcpkg install openssl-windows:x64-windows
+#Switch to the rust project
+cargo build
