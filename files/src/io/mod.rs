@@ -1,23 +1,20 @@
-use std::result;
+
 use std::fs::{ read_dir, create_dir_all, copy};
 use std::env;
-
 use json::JsonValue;
-
-//use std::io;
 use std::path::Path;
 
 pub mod crypted;
-pub mod list;
 pub mod files;
 
+#[allow(dead_code)]
 pub fn backup(location:String,file_name:String,file_type:String) -> Result<(),String> {
 
     let current_dir_object = env::current_dir().unwrap();
     let current_dir = current_dir_object.to_str().unwrap();
 
-    let file_location = format!("{}\\fdb\\{}\\{}.{}",current_dir,location,file_name,file_type);
-    let backup_location = format!("{}\\fdb\\backup\\{}.{}",current_dir,file_name,file_type);
+    let file_location = format!("{}/fdb/{}/{}.{}",current_dir,location,file_name,file_type);
+    let backup_location = format!("{}/fdb/backup/{}.{}",current_dir,file_name,file_type);
 
     match copy(&file_location, &backup_location) {
         Ok(_r) => {
@@ -34,16 +31,13 @@ pub fn backup(location:String,file_name:String,file_type:String) -> Result<(),St
 
 }
 
-pub fn make_base_dirs() -> Result<(),String> {
+pub fn make_base_dirs(current_dir:String) -> Result<(),String> {
 
-    let current_dir_object = env::current_dir().unwrap();
-    let current_dir = current_dir_object.to_str().unwrap();
-
-    let base_dir_main = format!("{}\\fdb\\",current_dir);
-    let base_dir_files = format!("{}\\fdb\\files\\",current_dir);
-    let base_dir_list = format!("{}\\fdb\\list\\",current_dir);
-    let base_dir_vault = format!("{}\\fdb\\vault\\",current_dir);
-    let base_dir_backup = format!("{}\\fdb\\backup\\",current_dir);
+    let base_dir_main = format!("{}/files/",current_dir);
+    let base_dir_files = format!("{}/files/files/",current_dir);
+    let base_dir_list = format!("{}/files/list/",current_dir);
+    let base_dir_vault = format!("{}/files/vault/",current_dir);
+    let base_dir_backup = format!("{}/files/backup/",current_dir);
 
     match create_dir_all(&base_dir_main) {
         Ok(_r) => {},
@@ -84,11 +78,9 @@ pub fn make_base_dirs() -> Result<(),String> {
 
 }
 
-pub fn get_files(location:String) ->  Result<JsonValue,String> {
+pub fn get_files(current_dir:String,location:String) ->  Result<JsonValue,String> {
 
-    let current_dir_object = env::current_dir().unwrap();
-    let current_dir = current_dir_object.to_str().unwrap();
-    let base_dir_main = format!("{}\\fdb\\{}\\",current_dir,location);
+    let base_dir_main = format!("{}/files/{}/",current_dir,location);
 
     if Path::new(&base_dir_main).exists() == false {
         return Err("directory_not_found-get_files-list-io".to_string());
@@ -99,7 +91,20 @@ pub fn get_files(location:String) ->  Result<JsonValue,String> {
     for file in read_dir(base_dir_main).unwrap() {
         match file {
             Ok(r) => {
-                collect.push(parse(r.path().to_str().unwrap().to_string()));
+
+                match r.path().to_str() {
+                    Some(e) => {
+                        let parsed = parse(e.to_string());
+                        match collect.push(parsed) {
+                            Ok(_r) => {},
+                            Err(_e) => {}
+                        };
+                    },
+                    None => {}
+                }
+
+                //let parsed = parse(r.path().to_str().unwrap().to_string()
+                //collect.push());
             },
             Err(_e) => {}
         }
@@ -111,7 +116,7 @@ pub fn get_files(location:String) ->  Result<JsonValue,String> {
 
 fn parse(location:String) -> String {
     let mut collect = Vec::new();
-    for item in location.split("\\") {
+    for item in location.split("/") {
         collect.push(item.to_string());
     }
     let len = collect.len() - 1;

@@ -5,3 +5,20 @@ authors = ["gzbakku <gzbakku@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+clap = "2.33.0"
+actix-web = "1.0.0"
+actix-service = "0.4.2"
+reqwest = "0.9.24"
+
+bytes = "0.4"
+futures = "0.1"
+env_logger = "*"
+serde = "1.0"
+serde_json = "1.0"
+serde_derive = "1.0"
+json = "*"
+lazy_static = "1.4.0"
+
+aes-gcm = "0.3.0"
+md5 = "0.7.0"
+rand = "0.7.2"

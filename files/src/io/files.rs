@@ -1,13 +1,9 @@
 use std::fs::File;
-use std::result;
-use std::env::current_dir;
 use std::io::{Write,Read};
 
-pub fn read(file_name:String) -> Result<String,String> {
+pub fn read(current_dir:String,file_name:String) -> Result<String,String> {
 
-    let current_dir_object = current_dir().unwrap();
-    let current_dir = current_dir_object.to_str().unwrap();
-    let location = format!("{}\\fdb\\files\\{}.fdbf",current_dir,file_name);
+    let location = format!("{}/files/files/{}.fdbf",current_dir,file_name);
 
     let f = File::open(&location);
     let mut buffer = Vec::new();
@@ -42,11 +38,9 @@ pub fn read(file_name:String) -> Result<String,String> {
 
 }
 
-pub fn write(file_name:String,data:Vec<u8>) -> Result<(),String> {
+pub fn write(current_dir:String,file_name:String,data:Vec<u8>) -> Result<(),String> {
 
-    let current_dir_object = current_dir().unwrap();
-    let current_dir = current_dir_object.to_str().unwrap();
-    let location = format!("{}\\fdb\\files\\{}.fdbf",current_dir,file_name);
+    let location = format!("{}/files/files/{}.fdbf",current_dir,file_name);
 
     let f = File::create(&location);
     match f {
