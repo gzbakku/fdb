@@ -1,8 +1,13 @@
 #[macro_use]
 extern crate lazy_static;
 
+//extern crate clap;
+use clap;
+//use clap::{Arg, App};
+
 use std::sync::Mutex;
 use std::collections::HashMap;
+use std::path::Path;
 
 use actix_web::{
     web, App, Error, HttpResponse, HttpServer
@@ -17,23 +22,169 @@ use json::JsonValue;
 mod server;
 mod crypt;
 mod io;
+mod common;
 
 lazy_static! {
     #[derive(Debug)]
     static ref KEY: Mutex<Vec<String>> =  Mutex::new(vec![]);
     static ref DIR: Mutex<Vec<String>> =  Mutex::new(vec![]);
+    static ref ID: Mutex<Vec<String>> =  Mutex::new(vec![]);
+    static ref SIG: Mutex<Vec<String>> =  Mutex::new(vec![]);
     static ref BOOK : Mutex<HashMap<String,JsonValue>> = Mutex::new(HashMap::new());
-    static ref CONFIG : Mutex<JsonValue> = Mutex::new(JsonValue::new_object());
+    static ref ACTORS : Mutex<JsonValue> = Mutex::new(JsonValue::new_object());
 }
 
+//
 
 //*******************************************************
 //main
 
+/*
+    cargo run -- --secure=Om2lPq84vgIhsPEhWsh3LdRmNmI2MXpQ --signature=XW5L4OBPjuRcLhNUAvi40mOG3RdeJ6Pb --id=aXjD1ulK7VDP7yZRtmjVkbL6tMCUIhi5 --base_dir=d://workstation/expo/rust/fdb/composer/instance --port=8088
+*/
+
 fn main(){
 
-    // let current_dir_object = env::current_dir().unwrap();
-    // let current_dir = current_dir_object.to_str().unwrap();
+    let matches = clap::App::new("Fuc* DB Composer")
+                          .version("0.0.1")
+                          .author("gzbakku. <gzbakku@gmail.com>")
+                          .about("Fuc* DB Fastest NoSql Secure Database Written in Rust")
+                           .arg(
+                               clap::Arg::with_name("secure")
+                                .help("secure encrypting key")
+                                .long("secure")
+                                .value_name("secure")
+                                .required(true)
+                            )
+                            .arg(
+                                clap::Arg::with_name("base_dir")
+                                 .help("output base dir path")
+                                 .long("base_dir")
+                                 .value_name("base_dir")
+                                 .required(true)
+                             )
+                             .arg(
+                                 clap::Arg::with_name("id")
+                                  .help("actor id")
+                                  .long("id")
+                                  .value_name("id")
+                                  .required(true)
+                              )
+                              .arg(
+                                  clap::Arg::with_name("signature")
+                                   .help("actor secure signature")
+                                   .short("sig")
+                                   .long("signature")
+                                   .value_name("signature")
+                                   .required(true)
+                               )
+                               .arg(
+                                   clap::Arg::with_name("port")
+                                    .help("actor port")
+                                    .short("p")
+                                    .long("port")
+                                    .value_name("port")
+                                    .required(true)
+                                )
+                          .get_matches();
+
+        //------------------------------------
+        //extract id
+
+        if matches.is_present("id") {
+            match matches.value_of("id") {
+                Some(id) => {
+                    ID.lock().unwrap().push(id.to_string());
+                },
+                None => {
+                    common::error("not_found-id");
+                    return;
+                }
+            }
+        }
+
+        //------------------------------------
+        //extract signature
+
+        if matches.is_present("signature") {
+            match matches.value_of("signature") {
+                Some(signature) => {
+                    SIG.lock().unwrap().push(signature.to_string());
+                },
+                None => {
+                    common::error("not_found-signature");
+                    return;
+                }
+            }
+        }
+
+        //------------------------------------
+        //extract secure
+
+        if matches.is_present("secure") {
+            match matches.value_of("secure") {
+                Some(secure) => {
+                    KEY.lock().unwrap().push(secure.to_string());
+                },
+                None => {
+                    common::error("not_found-secure");
+                    return;
+                }
+            }
+        }
+
+        //------------------------------------
+        //extract base_dir
+
+        if matches.is_present("base_dir") {
+            match matches.value_of("base_dir") {
+                Some(path) => {
+                    if Path::new(&path).exists() == false {
+                        println!("path : {:?}",&path);
+                        common::error("invalid-base_dir : path does not exists");
+                        return;
+                    }
+                    match io::make_base_dirs(&path.to_string()) {
+                        Ok(_) => {},
+                        Err(_) => {
+                            common::error("failed-make_base_dirs-initiate-files-fdb");
+                            return;
+                        }
+                    }
+                    DIR.lock().unwrap().push(path.to_string());
+                },
+                None => {
+                    common::error("not_found-base_dir");
+                    return;
+                }
+            }
+        }
+
+        //------------------------------------
+        //extract port
+
+        if matches.is_present("port") {
+            match matches.value_of("port") {
+                Some(port) => {
+                    match server(port.to_string()) {
+                        Ok(_) => {},
+                        Err(_) => {}
+                    }
+                },
+                None => {
+                    common::error("not_found-port");
+                    return;
+                }
+            }
+        }
+
+}
+
+#[allow(dead_code)]
+fn test_main(){
+
+    //let current_dir_object = std::env::current_dir().unwrap();
+    //let current_dir = current_dir_object.to_str().unwrap();
 
     let key = "8cfb30b34977529853bbe46afdbbd5ae".to_string();
     KEY.lock().unwrap().push(key.to_string());
@@ -43,7 +194,7 @@ fn main(){
 
     let get_dir = DIR.lock().unwrap()[0].to_string();
 
-    match io::make_base_dirs(get_dir) {
+    match io::make_base_dirs(&get_dir) {
         Ok(_r) => {},
         Err(_e) => {
             panic!("failed-make_base_dirs-initiate-files-fdb");
@@ -103,6 +254,8 @@ where
 
         let connection_info = req.connection_info().clone();
 
+        println!("connection_info : {:?}", connection_info);
+
         //let peer = connection_info.remote();
         //println!("peer : {:?}", peer);
 
@@ -130,6 +283,8 @@ fn server(port:String) -> std::io::Result<()> {
     let addr = String::from(format!("127.0.0.1:{}",port));
     println!("listening on port {}",&addr);
 
+    common::success();
+
     HttpServer::new(|| {
         App::new()
             .wrap(Auth)
@@ -148,12 +303,6 @@ fn server(port:String) -> std::io::Result<()> {
             )
             .service(
                 web::resource("/list").route(web::post().to_async(list))
-            )
-            .service(
-                web::resource("/set/key").route(web::post().to_async(set_key))
-            )
-            .service(
-                web::resource("/set/config").route(web::post().to_async(set_config))
             )
     })
     .bind(addr)?
@@ -397,60 +546,6 @@ fn list(payload: web::Payload) -> impl Future<Item = HttpResponse, Error = Error
                 return Ok(server::error(e.to_string()));
             }
         }
-
-    })
-
-}
-
-fn set_key(payload: web::Payload) -> impl Future<Item = HttpResponse, Error = Error> {
-
-    payload.concat2().from_err().and_then(|body| {
-
-        let result = json::parse(std::str::from_utf8(&body).unwrap());
-        let injson: JsonValue = match result {
-            Ok(v) => v,
-            Err(e) => json::object! {"err" => e.to_string() },
-        };
-
-        if &injson.has_key("key") == &false {
-            return Ok(server::error("not_found-file_name-set_key".to_string()));
-        }
-        if &injson["key"].is_string() == &false {
-            return Ok(server::error("invalid-file_data-set_key".to_string()));
-        }
-
-        let key = &injson["key"].to_string();
-
-        //let key = "8cfb30b34977529853bbe46afdbbd5ae".to_string();
-
-        KEY.lock().unwrap().push(key.to_string());
-
-        return Ok(server::success());
-
-    })
-
-}
-
-fn set_config(payload: web::Payload) -> impl Future<Item = HttpResponse, Error = Error> {
-
-    payload.concat2().from_err().and_then(|body| {
-
-        let result = json::parse(std::str::from_utf8(&body).unwrap());
-        let injson: JsonValue = match result {
-            Ok(v) => v,
-            Err(e) => json::object! {"err" => e.to_string() },
-        };
-
-        if &injson.has_key("config") == &false {
-            return Ok(server::error("not_found-file_name-set_key".to_string()));
-        }
-        if &injson["config"].is_object() == &false {
-            return Ok(server::error("invalid-file_data-set_key".to_string()));
-        }
-
-        CONFIG.lock().unwrap()["config"] = injson["config"].clone();
-
-        return Ok(server::success());
 
     })
 

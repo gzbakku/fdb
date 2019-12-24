@@ -1,20 +1,12 @@
 extern crate rand;
 extern crate reqwest;
 
-use std::net::TcpListener;
 use serde_json::json;
-use serde_json::Value;
-use serde::Deserialize;
-use std::fs::{File,create_dir_all,remove_file,remove_dir_all};
+use std::net::TcpListener;
+use std::fs::{File,create_dir_all,remove_dir_all};
 use std::io;
-use std::io::Read;
 use crate::common;
 use crate::crypt;
-
-#[derive(Deserialize, Debug)]
-struct IP {
-    ip:String
-}
 
 pub fn init(base_ip:&String,base_password:&String,base_dir_location:&String,config_location:&String){
 
@@ -78,7 +70,6 @@ pub fn init(base_ip:&String,base_password:&String,base_dir_location:&String,conf
         if confirm_fetch_ip == "yes\r\n".to_string() {
 
             let client = reqwest::Client::new();
-            let mut fetch_ip_failed = true;
 
             match client.get("https://api6.ipify.org?format=json").send() {
                 Ok(mut res) => {
@@ -89,7 +80,6 @@ pub fn init(base_ip:&String,base_password:&String,base_dir_location:&String,conf
                                     match object["ip"].as_str() {
                                         Some(origin) => {
                                             ip = origin.to_string();
-                                            fetch_ip_failed = false;
                                         },
                                         None => {
                                             common::error("failed extract origin object");
@@ -132,18 +122,14 @@ pub fn init(base_ip:&String,base_password:&String,base_dir_location:&String,conf
     common::log_string(format!("your ip : {:?}",ip));
     common::answer();
 
-    let device_id: String = common::uid();
-    let device_signature: String = common::uid();
-    let instance_id: String = common::uid();
-    let instance_signature: String = common::uid();
-
     config["app"] = serde_json::to_value("fdb".to_string()).unwrap();
     config["type"] = serde_json::to_value("composer".to_string()).unwrap();
     config["composer_ip"] = serde_json::to_value(ip).unwrap();
-    config["device_id"] = serde_json::to_value(device_id).unwrap();
-    config["device_signature"] = serde_json::to_value(device_signature).unwrap();
-    config["instance_id"] = serde_json::to_value(instance_id).unwrap();
-    config["instance_signature"] = serde_json::to_value(instance_signature).unwrap();
+    config["composer_id"] = serde_json::to_value(common::uid()).unwrap();
+    config["device_id"] = serde_json::to_value(common::uid()).unwrap();
+    config["device_signature"] = serde_json::to_value(common::uid()).unwrap();
+    config["instance_id"] = serde_json::to_value(common::uid()).unwrap();
+    config["instance_signature"] = serde_json::to_value(common::uid()).unwrap();
     config["config_file_location"] = serde_json::to_value(config_location).unwrap();
     config["base_directory_location"] = serde_json::to_value(base_dir_location).unwrap();
 
@@ -184,7 +170,7 @@ pub fn init(base_ip:&String,base_password:&String,base_dir_location:&String,conf
          Ok(_) => {
              common::log("base directory generated");
          },
-         Err(e) => {
+         Err(_) => {
              common::error("failed create fdb base directory");
              panic!("failed create fdb base directory");
          }
@@ -253,7 +239,7 @@ pub fn reset(base_ip:&String,base_password:&String,base_dir_location:&String,con
 
 }
 
-pub fn node(base_ip:&String,base_password:&String,base_dir_location:&String,config_location:&String){
+pub fn node(base_ip:&String,base_password:&String,base_dir_location:&String,config_location:&String,out_dir_location:&String){
 
     //read config file
     //decrypt secure password
@@ -266,43 +252,19 @@ pub fn node(base_ip:&String,base_password:&String,base_dir_location:&String,conf
     //*********************************
     //read config file
 
-    let cipher:Vec<u8>;
-    let nonce:Vec<u8>;
-    let config;
+    let mut config;
+    let password:String;
 
-    match File::open(config_location) {
-        Ok(mut r) => {
-            let mut object_as_string = String::new();
-            match r.read_to_string(&mut object_as_string) {
-                Ok(r) => {
-                    match json::parse(&object_as_string){
-                        Ok(object) => {
-                            config = object.clone();
-                            cipher = convert_json_string_to_vec(object["cipher"].to_string());
-                            nonce = convert_json_string_to_vec(object["nonce"].to_string());
-                        },
-                        Err(e) => {
-                            println!("{:?}",e);
-                            common::error("failed to parse config file into a json object");
-                            return;
-                        }
-                    }
-                },
-                Err(_) => {
-                    common::error("failed to read config file as a string");
-                    return;
-                }
-            }
+    match crate::io::read_config(config_location.to_string(),base_password.to_string()) {
+        Ok(r)=>{
+            config = r.config;
+            password = r.password;
         },
-        Err(e) => {
-            println!("{:?}",e);
-            common::error("failed to read config file");
+        Err(_)=>{
+            common::error("password failed please try again and make sure config file is a valid json object.");
             return;
         }
-    }
-
-    let hash = common::hash(base_password.to_string());
-    let password = crypt::decrypt(cipher,hash.to_string(),nonce);
+    };
 
     //*********************************
     //make node config here
@@ -313,14 +275,14 @@ pub fn node(base_ip:&String,base_password:&String,base_dir_location:&String,conf
     node["type"] = serde_json::to_value("node".to_string()).unwrap();
     node["node_ip"] = serde_json::to_value(base_ip.to_string()).unwrap();
     node["node_id"] = serde_json::to_value(common::uid()).unwrap();
-
     node["node_signature"] = serde_json::to_value(common::uid()).unwrap();
-
+    node["device_id"] = serde_json::to_value(common::uid()).unwrap();
+    node["device_signature"] = serde_json::to_value(common::uid()).unwrap();
     node["base_directory_location"] = serde_json::to_value(base_dir_location.to_string()).unwrap();
-
     node["instance_signature"] = serde_json::to_value(config["instance_signature"].to_string()).unwrap();
-
     node["instance_id"] = serde_json::to_value(config["instance_id"].to_string()).unwrap();
+    node["composer_id"] = serde_json::to_value(config["composer_id"].to_string()).unwrap();
+    node["composer_ip"] = serde_json::to_value(config["composer_ip"].to_string()).unwrap();
 
     match common::time::now() {
         Ok(timestamp)=>{
@@ -340,10 +302,93 @@ pub fn node(base_ip:&String,base_password:&String,base_dir_location:&String,conf
         config["instance_id"].to_string(),
         password
     );
-
     node["auth_signature"] = serde_json::to_value(common::hash(signature)).unwrap();
 
-    println!("{:#?}",node);
+    //convert node jsn from serde json to json object
+    let node_as_string = node.to_string();
+    let node_as_config_type_object = json::parse(&node_as_string).unwrap();
+    config["nodes"] = json::parse(&"[]".to_string()).unwrap();
+    match config["nodes"].push(node_as_config_type_object){
+        Ok(_)=>{},
+        Err(_)=>{
+            common::error("failed to add new node to composer config file.");
+            return;
+        }
+    }
+
+    //------------------------------------------------
+    //make composing actors here
+
+    let actors = [
+       "node",
+       "files",
+       "list",
+       "dictionary",
+       "users"
+    ];
+
+    let available_ports = get_ports(actors.len());
+    let mut assigned_actors = Vec::new();
+    let mut port_index:usize = 0;
+    for a in &actors {
+        let mut port_base = json!({});
+        port_base["type"] = serde_json::to_value(a).unwrap();
+        port_base["port"] = serde_json::to_value(available_ports[port_index]).unwrap();
+        let actor_id: String = common::uid();
+        port_base["id"] = serde_json::to_value(actor_id).unwrap();
+        let actor_signature: String = common::uid();
+        port_base["signature"] = serde_json::to_value(actor_signature).unwrap();
+        port_index += 1;
+        assigned_actors.push(port_base);
+    }
+
+    node["actors"] = serde_json::to_value(assigned_actors).unwrap();
+
+    common::log("actors configured");
+
+    //*********************************
+    //create the node config file
+
+    match File::create(out_dir_location) {
+        Ok(f) => {
+            match serde_json::to_writer_pretty(&f, &node) {
+                Ok(_) => {
+                    common::log("node config file generated");
+                },
+                Err(_) => {
+                    common::error("failed to write data to node config file");
+                    panic!("failed to write data to node config file");
+                }
+            }
+        },
+        Err(_) => {
+            common::error("failed create fdb node config file");
+            panic!("failed create fdb node config file");
+        }
+    }
+
+    //*********************************
+    //save the composer config file
+
+    match File::create(config_location) {
+        Ok(mut f) => {
+            match config.write_pretty(&mut f,2) {
+                Ok(_) => {
+                    common::log("config file generated");
+                },
+                Err(_) => {
+                    common::error("failed to write data to config file");
+                    panic!("failed to write data to config file");
+                }
+            }
+        },
+        Err(_) => {
+            common::error("failed create fdb config file");
+            panic!("failed create fdb config file");
+        }
+    }
+
+    common::space();
 
 }
 
@@ -362,15 +407,4 @@ fn get_ports(how_many:usize) -> Vec<u16> {
         }
     }
     available
-}
-
-fn convert_json_string_to_vec(vector_as_string:String) -> Vec<u8> {
-    let mut vec_str = vector_as_string.clone();
-    vec_str = vec_str.replace("[","");
-    vec_str = vec_str.replace("]","");
-    let mut vec = Vec::new();
-    for num in vec_str.split(",") {
-        vec.push(num.parse::<u8>().unwrap());
-    }
-    return vec;
 }

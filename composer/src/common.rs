@@ -21,8 +21,9 @@ pub fn log_string(m:String){
     println!(">>> {}",m);
 }
 
-pub fn error(e:&str){
+pub fn error(e:&str) -> String {
     println!("!!! {}",e);
+    e.to_string()
 }
 
 pub fn question(e:&str){

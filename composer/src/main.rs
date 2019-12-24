@@ -1,25 +1,38 @@
 extern crate clap;
-use clap::{Arg, App, SubCommand};
+use clap::{Arg, App};
 
-use std::fs::{File,create_dir_all};
-use std::path::Path;
 use std::format;
-use std::env;
 
 mod init;
 mod common;
 mod crypt;
+mod io;
+
+mod composer;
+mod node;
+mod starter;
+
+/*
+
+//-------------
+//init fdb
 
 //cargo run -- -p=akku -d=d://workstation/expo/rust/fdb/instance -c=d://workstation/expo/rust/fdb/instance/fdb.json --init
 
-//cargo run -- -p=akku -d=d://workstation/expo/rust/fdb/instance --ip=103.214.61.242 --init --node
+*/
+
+/*
+
+//-------------
+//make new node
+
+cargo run -- -p=akku --ip=103.214.61.242 --init --node --config=d://workstation/expo/rust/fdb/instance/fdb.json -d=d://workstation/expo/rust/fdb/ --out=d://workstation/expo/rust/fdb/this_node_config.json
+
+*/
 
 fn main() {
 
-    let current_dir_object = env::current_dir().unwrap();
-    // let unparsed_current_dir = current_dir_object.to_str().unwrap();
-    // let current_dir = unparsed_current_dir.replace("\\","/");
-    let current_dir = current_dir_object.to_str().unwrap();
+    let current_dir = io::current_dir();
 
     common::log("starting fdb");
 
@@ -72,6 +85,14 @@ fn main() {
                                   .required(false)
                               )
                               .arg(
+                                  Arg::with_name("out")
+                                   .help("output file path and extension ex :- d://example.json")
+                                   .short("o")
+                                   .long("out")
+                                   .value_name("out")
+                                   .required(false)
+                               )
+                              .arg(
                                   Arg::with_name("ip")
                                    .help("your publically accessible ip address")
                                    .long("ip")
@@ -109,30 +130,27 @@ fn main() {
         common::log("setting up config file");
 
         let mut config_file_location = format!("{}/instance/fdb.json",current_dir.to_string());
-        let mut given_by_user_config = false;
         if matches.is_present("config") {
             match matches.value_of("config") {
                 Some(v) => {
                     config_file_location = v.to_string();
-                    given_by_user_config = true;
                 },
                 None => {}
             }
         }
 
         let mut does_config_file_exists = false;
-        if Path::new(&config_file_location).exists() {
+        if io::check_path(&config_file_location) {
             does_config_file_exists = true;
         }
 
         //***********************
         //extract ip address
 
-        common::log("setting up base directory");
-
         let mut ip = String::new();
         let mut given_by_user_ip = false;
         if matches.is_present("ip") {
+            common::log("setting up given Ip Address");
             match matches.value_of("ip") {
                 Some(v) => {
                     ip = v.to_string();
@@ -160,8 +178,29 @@ fn main() {
         }
 
         let mut does_base_dir_exists = false;
-        if Path::new(&base_dir_location).exists() {
+        if io::check_path(&base_dir_location) {
             does_base_dir_exists = true;
+        }
+
+        //***********************
+        //extract out dir
+
+        let mut out_dir_location = format!("{}/instance/nodes/",current_dir.to_string());
+        let mut given_by_user_out_dir = false;
+        if matches.is_present("out") {
+            common::log("setting up out file");
+            match matches.value_of("out") {
+                Some(v) => {
+                    out_dir_location = v.to_string();
+                    given_by_user_out_dir = true;
+                },
+                None => {}
+            }
+        }
+
+        let mut does_out_dir_exists = false;
+        if io::check_path(&out_dir_location) {
+            does_out_dir_exists = true;
         }
 
         //***********************
@@ -175,7 +214,7 @@ fn main() {
         let mut do_reset = false;
         if matches.is_present("reset") {
             if do_init {
-                println!("!!! you cannot init or reset at the same time.");
+                common::error("you cannot init or reset at the same time.");
                 return;
             }
             do_reset = true;
@@ -184,88 +223,116 @@ fn main() {
         let mut do_make_new_node = false;
         if matches.is_present("node") {
             if do_init == false {
-                println!("!!! you cannot make a new node without the init flag");
+                common::error("you cannot make a new node without the init flag");
                 return;
             }
             do_make_new_node = true;
         }
 
         if do_make_new_node {
-            if does_config_file_exists == false {
-                println!("{:?}",config_file_location);
-                println!("!!! no config file found.");
+            common::log("starting generate node");
+            if given_by_user_out_dir == false {
+                common::error("please provide output file path using --out=D://example.json flag.");
                 return;
             }
-            if does_base_dir_exists == false {
-                println!("!!! no fdb base directory found.");
+            if does_out_dir_exists == true {
+                println!("out_dir_location : {:?}",out_dir_location);
+                common::error("given path already exists please remove the file or try a diffrent file name");
+                return;
+            }
+            if does_config_file_exists == false {
+                println!("config_file_location : {:?}",config_file_location);
+                common::error("no config file found.");
                 return;
             }
             if !given_by_user_ip {
-                println!("!!! please provide a publically accessible ip address on which this node will be initiated.");
+                common::error("please provide a publically accessible ip address on which this node will be initiated.");
                 return;
             }
-            if !given_by_user_base_dir {
-                println!("!!! please provide the base directory in which fdb will process and store the instance sensitive data.");
+            if given_by_user_base_dir {
+                init::node(&ip,&password,&base_dir_location,&config_file_location,&out_dir_location);
+                return;
+            } else {
+                common::error("please provide a base directory for the node to store and process files in this directory will be used on the host hardware file system so be carefull and make sure the file permissions are settuped correctly.");
                 return;
             }
-            init::node(&ip,&password,&base_dir_location,&config_file_location);
-            return;
         }
 
         //init new database instance here
         if do_init {
+            common::log("starting init");
             if does_config_file_exists {
-                println!("!!! config file already exists in this location please choose a diffrent directory.");
+                common::error("config file already exists in this location please choose a diffrent directory.");
                 return;
             }
             if does_base_dir_exists {
-                println!("!!! directory named fdb already exists please choose a diffrent directory to initiate a new fdb instance.");
+                common::error("directory named fdb already exists please choose a diffrent directory to initiate a new fdb instance.");
                 return;
             }
             init::init(&ip,&password,&base_dir_location,&config_file_location);
+            return;
         }
 
         //reset the db instance here
         if do_reset {
+            common::log("starting reset");
             if does_config_file_exists == false {
-                println!("!!! no config file found.");
+                common::error("no config file found.");
                 return;
             }
             if does_base_dir_exists == false {
-                println!("!!! no fdb base directory found.");
+                common::error("no fdb base directory found.");
                 return;
             }
             init::reset(&ip,&password,&base_dir_location,&config_file_location);
+            return;
         }
 
+        //start checks
+        if does_config_file_exists == false {
+            common::error("fdb config file not found in this directory you can set config file path via --config=d://fdb.json flag.");
+            return;
+        }
+        if does_base_dir_exists == false {
+            common::error("base directory does not exists");
+            return;
+        }
 
-}
-
-fn check_setup(){
-
-    let current_dir_object = env::current_dir().unwrap();
-    let current_dir = current_dir_object.to_str().unwrap();
-
-    let base_location = format!("{}/instance",current_dir);
-
-    let location = format!("{}/instance/config.fdbv",current_dir);
-
-    if Path::new(&location).exists() == false {
-
-        match create_dir_all(&base_location) {
-            Ok(_r) => {},
-            Err(e) => {
-                //return Err(e.to_string());
+        match io::read_config(config_file_location,password) {
+            Ok(r) => {
+                let config = &r.config;
+                if config.has_key("app") == false {
+                    common::error("not a fdb config file. No Key Named App Found.");
+                    return;
+                }
+                if config["app"].to_string() != "fdb".to_string() {
+                    common::error("not a fdb config file. App Named Other then FDB.");
+                    return;
+                }
+                if config.has_key("type") == false {
+                    common::error("not a fdb config file. No Key Named App Found.");
+                    return;
+                }
+                if
+                    config["type"].to_string() != "node".to_string() &&
+                    config["type"].to_string() != "composer".to_string()
+                {
+                    common::error("not a fdb config file. Invalid App Type node/composer.");
+                    return;
+                }
+                let session = common::uid();
+                if config["type"].to_string() == "node".to_string() {
+                    node::init(&session,&r);
+                }
+                if config["type"].to_string() == "composer".to_string() {
+                    composer::init(&session,&r);
+                }
+            },
+            Err(_) => {
+                common::error("failed to read config file, please make sure its a valid fdb config json file and a valid json object.");
+                return;
             }
         }
-
-        //ask for password
-
-    }
-
-    let open = File::open(&location);
-
-    println!("Hello, world!");
 
 }
 

@@ -1,0 +1,48 @@
+{
+  "actors": [
+    {
+      "id": "reKjEBwB4GcvvPBDX4lGkWBAnNRJM2Je",
+      "port": 5200,
+      "signature": "tJfm4DNEnGAeXmx4iSU4cHtZ4vM02ieM",
+      "type": "node"
+    },
+    {
+      "id": "E0DkR3NyATihWP7EujnB6QW6tOKQhb6n",
+      "port": 5201,
+      "signature": "ZweLjh9SzEVCoGR4HOOWGdoPkHIJVBLh",
+      "type": "files"
+    },
+    {
+      "id": "JvLg3bw4XPpR8tRQ0UU20GIl25S98vgu",
+      "port": 5202,
+      "signature": "OTwmZrdfZQNKhsjhUVO4j6fWQkaQfgu0",
+      "type": "list"
+    },
+    {
+      "id": "2CS6zXsq5i5NhuTNVGNoxQgPboHdHeXA",
+      "port": 5203,
+      "signature": "WREQdEzEuM5Bc7vecvtTsf7KNcY1weN0",
+      "type": "dictionary"
+    },
+    {
+      "id": "SHXYm5PgyOPDvFbd9T9yWUmHU7BsRMt5",
+      "port": 5204,
+      "signature": "QqJzvferitwvCJI9NdN3KMISLUPPa7Ev",
+      "type": "users"
+    }
+  ],
+  "app": "fdb",
+  "auth_signature": "b1c71c47ac83e710eac9b2f63e139d41",
+  "base_directory_location": "d://workstation/expo/rust/fdb/",
+  "composer_id": "null",
+  "composer_ip": "103.214.60.17",
+  "device_id": "RBgVXYwE904MjrzB4GXyxm9rMmGT4VQD",
+  "device_signature": "YLT5wMrGUwOi2IpeXlWS3rsZwj7uQJC0",
+  "instance_id": "DSeiY26Bg6FkjUgsyT9PQDnbQpxLF6nL",
+  "instance_signature": "kvfp9GgwgVjPVkQxMTd2pPPjYVGVYS8B",
+  "node_id": "4eYkmaOPqWJ2uW1ChvYkXNclDG5p4ryv",
+  "node_ip": "103.214.61.242",
+  "node_signature": "oDYeQloxYw9xfpOhWNfiCf13jcRL0y2R",
+  "timestamp": "1576925417441",
+  "type": "node"
+}

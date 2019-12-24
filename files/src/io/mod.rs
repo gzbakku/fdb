@@ -31,7 +31,7 @@ pub fn backup(location:String,file_name:String,file_type:String) -> Result<(),St
 
 }
 
-pub fn make_base_dirs(current_dir:String) -> Result<(),String> {
+pub fn make_base_dirs(current_dir:&String) -> Result<(),String> {
 
     let base_dir_main = format!("{}/files/",current_dir);
     let base_dir_files = format!("{}/files/files/",current_dir);

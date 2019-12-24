@@ -1,11 +1,9 @@
 extern crate rand;
 
-use aes_gcm::Aes256Gcm; // Or `Aes128Gcm`
+use aes_gcm::Aes256Gcm;
 use aes_gcm::aead::{Aead, NewAead, generic_array::GenericArray};
 use std::str;
-
-//sample key = 8cfb30b34977529853bbe46afdbbd5ae
-//sample iv/nonce = /B?E(H+MbQeT
+use crate::common;
 
 //key length 32
 //nonce length 12
@@ -13,12 +11,12 @@ use std::str;
 use rand::{thread_rng, Rng};
 
 #[derive(Debug)]
-pub struct Result {
+pub struct Encrypted {
     pub nonce:Vec<u8>,
     pub cipher:Vec<u8>
 }
 
-pub fn encrypt(i_data:String,i_key:String) -> Result {
+pub fn encrypt(i_data:String,i_key:String) -> Encrypted {
 
     let key = GenericArray::clone_from_slice(i_key.as_bytes());
     let aead = Aes256Gcm::new(key);
@@ -32,32 +30,46 @@ pub fn encrypt(i_data:String,i_key:String) -> Result {
     let nonce = GenericArray::from_slice(&iv); // 96-bits; unique per message
     let ciphertext = aead.encrypt(nonce, my_data.as_ref()).expect("encryption failure!");
 
-    return Result {
+    return Encrypted {
         nonce:iv.to_vec(),
         cipher:ciphertext
     };
 
 }
 
-pub fn decrypt(data:Vec<u8>,i_key:String,i_iv:Vec<u8>) -> String {
+pub fn decrypt(data:Vec<u8>,i_key:String,i_iv:Vec<u8>) -> Result<String,String> {
 
     let key = GenericArray::clone_from_slice(i_key.as_bytes());
     let aead = Aes256Gcm::new(key);
     let nonce = GenericArray::from_slice(&i_iv);
 
-    let plaintext = aead.decrypt(nonce, data.as_ref()).expect("decryption failure!");
-
-    let convert = str::from_utf8(&plaintext);
-
-    let mut result = String::from("{}");
-
-    match convert {
-        Ok(v)=>{
-            result = v.to_string();
+    match aead.decrypt(nonce, data.as_ref()) {
+        Ok(r) => {
+            let convert = str::from_utf8(&r);
+            match convert {
+                Ok(v)=>{
+                    return Ok(v.to_string());
+                },
+                Err(_) => {
+                    return Err("failed to parse cipher text to plain text".to_string());
+                }
+            }
         },
-        Err(_e) => {}
+        Err(_) => {
+            return Err(common::error("failed - decrypt secure password"));
+        }
     }
 
-    return result;
+}
 
+pub fn extract_password(base_password:String,nonce:Vec<u8>,cipher:Vec<u8>) -> Result<String,String> {
+    let hash = common::hash(base_password.to_string());
+    match decrypt(cipher,hash.to_string(),nonce) {
+        Ok(r) => {
+            Ok(r)
+        },
+        Err(_) => {
+            Err(common::error("password failed please try again."))
+        }
+    }
 }
