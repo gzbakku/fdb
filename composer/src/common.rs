@@ -2,6 +2,18 @@
 use rand::{thread_rng, Rng};
 use rand::distributions::Alphanumeric;
 
+pub struct SESSION {
+    pub id:String,
+    pub sig:String
+}
+
+pub fn new_session()-> SESSION {
+    SESSION {
+        id:uid(),
+        sig:uid()
+    }
+}
+
 pub fn hash(base:String) -> String {
     format!("{:?}",md5::compute(base.as_bytes()))
 }

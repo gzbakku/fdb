@@ -320,12 +320,11 @@ fn main() {
                     common::error("not a fdb config file. Invalid App Type node/composer.");
                     return;
                 }
-                let session = common::uid();
                 if config["type"].to_string() == "node".to_string() {
-                    node::init(&session,&r);
+                    node::init(&r);
                 }
                 if config["type"].to_string() == "composer".to_string() {
-                    composer::init(&session,&r);
+                    composer::init(&r);
                 }
             },
             Err(_) => {

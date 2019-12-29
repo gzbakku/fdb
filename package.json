@@ -1,0 +1,22 @@
+{
+  "name": "fdb",
+  "version": "1.0.0",
+  "description": "this is a nosql que based highly available database written in rust.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gzbakku/fdb.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gzbakku/fdb/issues"
+  },
+  "homepage": "https://github.com/gzbakku/fdb#readme",
+  "dependencies": {
+    "node-run-cmd": "^1.0.1"
+  }
+}

@@ -1,7 +1,7 @@
 use crate::io::Extracted;
 use crate::common;
 
-pub fn init(_session:&String,e:&Extracted){
+pub fn init(e:&Extracted){
 
     common::log("initiating composer");
 
