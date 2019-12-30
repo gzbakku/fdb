@@ -49,8 +49,8 @@ fn main(){
         //extract public file path
 
         let mut public_pem_file_path = format!("{}/public.pem",current_dir.to_string());
-        if matches.is_present("private") {
-            match matches.value_of("private") {
+        if matches.is_present("public") {
+            match matches.value_of("public") {
                 Some(v) => {
                     public_pem_file_path = v.to_string();
                 },

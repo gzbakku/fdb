@@ -17,6 +17,8 @@
   },
   "homepage": "https://github.com/gzbakku/fdb#readme",
   "dependencies": {
+    "fs-extra": "^8.1.0",
+    "inquirer": "^7.0.1",
     "node-run-cmd": "^1.0.1"
   }
 }
