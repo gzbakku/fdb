@@ -20,7 +20,7 @@ use actix_web::dev::{ServiceResponse,ServiceRequest};
 
 use futures::{Future, Stream, Poll};
 use futures::future::{ok, Either, FutureResult};
-use json::JsonValue;
+use json::{JsonValue,object};
 
 mod server;
 mod crypt;
@@ -37,9 +37,56 @@ struct Actor_Template {
 
 #[derive(Debug)]
 #[allow(non_camel_case_types)]
+pub struct Node_Template {
+    pub id:String,
+    pub sig:String,
+    pub port:String
+}
+
+impl Node_Template {
+    fn copy(&self) -> Node_Template {
+        Node_Template {
+            id:self.id.clone(),
+            sig:self.sig.clone(),
+            port:self.port.clone()
+        }
+    }
+}
+
+#[derive(Debug)]
+#[allow(non_camel_case_types)]
+pub struct Composer_Template {
+    pub id:String,
+    pub sig:String,
+    pub ip:String,
+    pub port:String
+}
+
+impl Composer_Template {
+    fn copy(&self) -> Composer_Template {
+        Composer_Template {
+            id:self.id.clone(),
+            sig:self.sig.clone(),
+            ip:self.ip.clone(),
+            port:self.port.clone()
+        }
+    }
+}
+
+#[derive(Debug)]
+#[allow(non_camel_case_types)]
 struct Session_Template {
     id:String,
     sig:String
+}
+
+impl Session_Template {
+    fn copy(&self) -> Session_Template {
+        Session_Template {
+            id:self.id.clone(),
+            sig:self.sig.clone()
+        }
+    }
 }
 
 lazy_static! {
@@ -54,6 +101,17 @@ lazy_static! {
     static ref ACTOR: Mutex<Actor_Template> =  Mutex::new(Actor_Template {
         id:String::new(),
         sig:String::new()
+    });
+    static ref NODE: Mutex<Node_Template> =  Mutex::new(Node_Template {
+        id:String::new(),
+        sig:String::new(),
+        port:String::new()
+    });
+    static ref COMPOSER: Mutex<Composer_Template> =  Mutex::new(Composer_Template {
+        id:String::new(),
+        sig:String::new(),
+        ip:String::new(),
+        port:String::new()
     });
     static ref BOOK : Mutex<HashMap<String,JsonValue>> = Mutex::new(HashMap::new());
     static ref ACTORS : Mutex<JsonValue> = Mutex::new(JsonValue::new_object());
@@ -90,20 +148,40 @@ fn main(){
                                  .required(true)
                              )
                              .arg(
-                                 clap::Arg::with_name("id")
+                                 clap::Arg::with_name("actor_id")
                                   .help("actor id")
-                                  .long("id")
-                                  .value_name("id")
+                                  .long("actor_id")
+                                  .value_name("actor_id")
                                   .required(true)
                               )
                               .arg(
-                                  clap::Arg::with_name("signature")
+                                  clap::Arg::with_name("actor_signature")
                                    .help("actor secure signature")
-                                   .short("sig")
-                                   .long("signature")
-                                   .value_name("signature")
+                                   .long("actor_signature")
+                                   .value_name("actor_signature")
                                    .required(true)
                                )
+                               .arg(
+                                   clap::Arg::with_name("node_port")
+                                    .help("node_port id")
+                                    .long("node_port")
+                                    .value_name("node_port")
+                                    .required(true)
+                                )
+                               .arg(
+                                   clap::Arg::with_name("node_id")
+                                    .help("node id")
+                                    .long("node_id")
+                                    .value_name("node_id")
+                                    .required(true)
+                                )
+                                .arg(
+                                    clap::Arg::with_name("node_signature")
+                                     .help("node secure signature")
+                                     .long("node_signature")
+                                     .value_name("node_signature")
+                                     .required(true)
+                                 )
                                .arg(
                                    clap::Arg::with_name("port")
                                     .help("actor port")
@@ -113,12 +191,33 @@ fn main(){
                                     .required(true)
                                 )
                                 .arg(
-                                    clap::Arg::with_name("composer")
+                                    clap::Arg::with_name("composer_ip")
                                      .help("composer ip adress and port")
-                                     .long("composer")
-                                     .value_name("composer")
+                                     .long("composer_ip")
+                                     .value_name("composer_ip")
                                      .required(true)
                                  )
+                                 .arg(
+                                     clap::Arg::with_name("composer_id")
+                                      .help("composer_id")
+                                      .long("composer_id")
+                                      .value_name("composer_id")
+                                      .required(true)
+                                  )
+                                  .arg(
+                                      clap::Arg::with_name("composer_port")
+                                       .help("composer_port")
+                                       .long("composer_port")
+                                       .value_name("composer_port")
+                                       .required(true)
+                                   )
+                                  .arg(
+                                      clap::Arg::with_name("composer_signature")
+                                       .help("composer_signature")
+                                       .long("composer_signature")
+                                       .value_name("composer_signature")
+                                       .required(true)
+                                   )
                                  .arg(
                                      clap::Arg::with_name("session_id")
                                       .help("session id")
@@ -133,40 +232,141 @@ fn main(){
                                        .value_name("session_signature")
                                        .required(true)
                                    )
+                                   .arg(
+                                       clap::Arg::with_name("public_key")
+                                        .help("public_key path")
+                                        .long("public_key")
+                                        .value_name("public_key")
+                                        .required(true)
+                                    )
+                                    .arg(
+                                        clap::Arg::with_name("private_key")
+                                         .help("private_key path")
+                                         .long("private_key")
+                                         .value_name("private_key")
+                                         .required(true)
+                                     )
                           .get_matches();
 
-        //------------------------------------
-        //extract id
+        //*************************************************************
+        //actor
 
-        if matches.is_present("id") {
-            match matches.value_of("id") {
+        if matches.is_present("actor_id") {
+            match matches.value_of("actor_id") {
                 Some(id) => {
                     ACTOR.lock().unwrap().id = id.to_string();
                 },
                 None => {
-                    common::error("not_found-id");
+                    common::error("not_found-actor_id");
                     return;
                 }
             }
         }
 
-        //------------------------------------
-        //extract signature
-
-        if matches.is_present("signature") {
-            match matches.value_of("signature") {
+        if matches.is_present("actor_signature") {
+            match matches.value_of("actor_signature") {
                 Some(signature) => {
                     ACTOR.lock().unwrap().sig = signature.to_string();
                 },
                 None => {
-                    common::error("not_found-signature");
+                    common::error("not_found-actor_signature");
                     return;
                 }
             }
         }
 
-        //------------------------------------
-        //session id
+        //*************************************************************
+        //composer
+
+        if matches.is_present("composer_id") {
+            match matches.value_of("composer_id") {
+                Some(id) => {
+                    COMPOSER.lock().unwrap().id = id.to_string();
+                },
+                None => {
+                    common::error("not_found-composer_id");
+                    return;
+                }
+            }
+        }
+
+        if matches.is_present("composer_ip") {
+            match matches.value_of("composer_ip") {
+                Some(ip) => {
+                    COMPOSER.lock().unwrap().ip = ip.to_string();
+                },
+                None => {
+                    common::error("not_found-composer_ip");
+                    return;
+                }
+            }
+        }
+
+        if matches.is_present("composer_port") {
+            match matches.value_of("composer_port") {
+                Some(port) => {
+                    COMPOSER.lock().unwrap().port = port.to_string();
+                },
+                None => {
+                    common::error("not_found-composer_port");
+                    return;
+                }
+            }
+        }
+
+        if matches.is_present("composer_signature") {
+            match matches.value_of("composer_signature") {
+                Some(signature) => {
+                    COMPOSER.lock().unwrap().sig = signature.to_string();
+                },
+                None => {
+                    common::error("not_found-composer_signature");
+                    return;
+                }
+            }
+        }
+
+        //*************************************************************
+        //node
+
+        if matches.is_present("node_id") {
+            match matches.value_of("node_id") {
+                Some(id) => {
+                    NODE.lock().unwrap().id = id.to_string();
+                },
+                None => {
+                    common::error("not_found-node_id");
+                    return;
+                }
+            }
+        }
+
+        if matches.is_present("node_port") {
+            match matches.value_of("node_port") {
+                Some(port) => {
+                    NODE.lock().unwrap().port = port.to_string();
+                },
+                None => {
+                    common::error("not_found-node_port");
+                    return;
+                }
+            }
+        }
+
+        if matches.is_present("node_signature") {
+            match matches.value_of("node_signature") {
+                Some(signature) => {
+                    NODE.lock().unwrap().sig = signature.to_string();
+                },
+                None => {
+                    common::error("not_found-node_signature");
+                    return;
+                }
+            }
+        }
+
+        //*************************************************************
+        //session
 
         if matches.is_present("session_id") {
             match matches.value_of("session_id") {
@@ -180,9 +380,6 @@ fn main(){
             }
         }
 
-        //------------------------------------
-        //session signature
-
         if matches.is_present("session_signature") {
             match matches.value_of("session_signature") {
                 Some(signature) => {
@@ -194,8 +391,6 @@ fn main(){
                 }
             }
         }
-
-        println!("{:?}",SESSION.lock().unwrap());
 
         //------------------------------------
         //extract secure
@@ -242,13 +437,51 @@ fn main(){
         //------------------------------------
         //set base key
 
-        let session = SESSION.lock().unwrap();
-        let actor = ACTOR.lock().unwrap();
-
-        let session_sig_string = format!("{}{}",actor.sig,session.sig);
+        let session_sig_string = format!("{}{}",ACTOR.lock().unwrap().sig,SESSION.lock().unwrap().sig);
         let session_hash = common::hash(session_sig_string);
 
         BASE_KEY.lock().unwrap().push(session_hash.to_string());
+
+        //------------------------------------
+        //ssl certs
+
+        let mut public_key = String::new();
+        if matches.is_present("public_key") {
+            match matches.value_of("public_key") {
+                Some(key) => {
+                    let key_as_string = String::from(key);
+                    if io::check_path(&key_as_string) == false {
+                        common::error("public_key not found");
+                        return;
+                    } else {
+                        public_key = key_as_string;
+                    }
+                },
+                None => {
+                    common::error("not_found-public_key");
+                    return;
+                }
+            }
+        }
+
+        let mut private_key = String::new();
+        if matches.is_present("private_key") {
+            match matches.value_of("private_key") {
+                Some(key) => {
+                    let key_as_string = String::from(key);
+                    if io::check_path(&key_as_string) == false {
+                        common::error("private_key not found");
+                        return;
+                    } else {
+                        private_key = key_as_string;
+                    }
+                },
+                None => {
+                    common::error("not_found-private_key");
+                    return;
+                }
+            }
+        }
 
         //------------------------------------
         //extract port
@@ -256,7 +489,7 @@ fn main(){
         if matches.is_present("port") {
             match matches.value_of("port") {
                 Some(port) => {
-                    match server(port.to_string()) {
+                    match server(port.to_string(),private_key,public_key) {
                         Ok(_) => {},
                         Err(_) => {}
                     }
@@ -280,6 +513,8 @@ fn test_main(){
     KEY.lock().unwrap().push(key.to_string());
 
     let dir = "D://workstation/expo/rust/fdb/instance".to_string();
+    let public_path = String::from("D://workstation/expo/rust/fdb/files/keys/private.pem");
+    let private_path = String::from("D://workstation/expo/rust/fdb/files/keys/private.pem");
     DIR.lock().unwrap().push(dir);
 
     let get_dir = DIR.lock().unwrap()[0].to_string();
@@ -291,7 +526,7 @@ fn test_main(){
         }
     }
 
-    match server("8088".to_string()) {
+    match server("8088".to_string(),private_path,public_path) {
         Ok(_) => {},
         Err(_) => {}
     }
@@ -342,21 +577,37 @@ where
 
     fn call(&mut self, req: ServiceRequest) -> Self::Future {
 
-        //let connection_info = req.connection_info().clone();
-
-        //let get_dir = DIR.lock().unwrap()[0].to_string();
-
+        let connection_info = req.connection_info().clone();
         let headers = req.headers();
+        let path = req.path();
+        let path_as_string = String::from(path);
         let base_key = BASE_KEY.lock().unwrap()[0].to_string();
+        let node_as_mutex = NODE.lock().unwrap();
+        let node_as_template = node_as_mutex.copy();
+        let composer_as_mutex = COMPOSER.lock().unwrap();
+        let composer_as_template = composer_as_mutex.copy();
 
-        //let peer = connection_info.remote();
-        //println!("peer : {:?}", peer);
+        let peer = connection_info.remote();
 
         let mut access_granted = true;
-        match auth::check(headers,base_key) {
-            Ok(_)=>{},
-            Err(_) => {
+
+        let mut peer_as_string:String = String::new();
+        match auth::extract_peer(peer) {
+            Ok(r)=>{
+                peer_as_string = r.to_string();
+            },
+            Err(_)=>{
+                common::error("failed-extract-peer-authenticate-files");
                 access_granted = false;
+            }
+        }
+
+        if access_granted {
+            match auth::check(headers,base_key,node_as_template,peer_as_string,path_as_string,composer_as_template) {
+                Ok(_)=>{},
+                Err(_) => {
+                    access_granted = false;
+                }
             }
         }
 
@@ -377,12 +628,12 @@ where
 //*******************************************************
 //server functions
 
-fn server(port:String) -> std::io::Result<()> {
+fn server(port:String,private:String,public:String) -> std::io::Result<()> {
 
     let addr = String::from(format!("127.0.0.1:{}",port));
-    println!("listening on port {}",&addr);
+    println!("@@@ listening on port {}",&addr);
 
-    common::success();
+    //common::success();
 
     HttpServer::new(|| {
         App::new()
@@ -659,7 +910,13 @@ fn list(payload: web::Payload) -> impl Future<Item = HttpResponse, Error = Error
 fn check(payload: web::Payload) -> impl Future<Item = HttpResponse, Error = Error> {
 
     payload.concat2().from_err().and_then(|_body| {
-        return Ok(server::success());
+        let session_as_mutex = SESSION.lock().unwrap();
+        let session_as_template = session_as_mutex.copy();
+        let session_id = session_as_template.id;
+        let session_as_json = object!{
+            "session_id" => session_id
+        };
+        return Ok(server::success_with_data(session_as_json));
     })
 
 }

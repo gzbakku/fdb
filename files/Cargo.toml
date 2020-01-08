@@ -8,9 +8,16 @@ edition = "2018"
 
 [dependencies]
 clap = "2.33.0"
+reqwest = "0.9.24"
+
 actix-web = "1.0.0"
 actix-service = "0.4.2"
-reqwest = "0.9.24"
+
+#actix-web = { version = "1.0.0", features = ["openssl"] }
+
+#actix-web = { version = "2.0", features = ["openssl"] }
+#actix-service = "1.0.1"
+#openssl = { version="0.10" }
 
 bytes = "0.4"
 futures = "0.1"

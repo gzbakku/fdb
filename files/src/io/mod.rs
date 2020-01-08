@@ -78,6 +78,14 @@ pub fn make_base_dirs(current_dir:&String) -> Result<(),String> {
 
 }
 
+pub fn check_path(p:&String) -> bool {
+    if Path::new(p).exists() {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 pub fn get_files(current_dir:String,location:String) ->  Result<JsonValue,String> {
 
     let base_dir_main = format!("{}/files/{}/",current_dir,location);
