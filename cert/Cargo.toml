@@ -8,7 +8,8 @@ description = "this is a rust lib to create x509 ssl certificate and private key
 homepage = "https://github.com/gzbakku/fdb/tree/master/cert"
 repository = "https://github.com/gzbakku/fdb/tree/master/cert"
 readme = "README.md"
-keywords = ["ssl", "openssl","certificate","api","generate","rsa","cryptograpgy","public","private"]
+keywords = ["ssl", "openssl","certificate","rsa","generate"]
+categories = ["cryptography", "api-bindings"]
 license-file = "License.md"
 license = "MIT"
 
