@@ -8,52 +8,81 @@ use std::fs::File;
 
 pub mod issuer;
 pub mod subject;
-mod common;
+pub mod common;
 pub mod builder;
 
 use builder::Builder;
 
-#[cfg(test)]
-mod test {
-    use crate;
+fn main(){
 
-    #[test]
-    fn test(){
+    let mut build = Builder::new();
 
-        let mut build = Builder::new();
+    build.set_key_path("D://workstation/expo/rust/fdb/cert/keys/key.pem".to_string());
+    build.set_certificate_path("D://workstation/expo/rust/fdb/cert/keys/cert.pem".to_string());
+    build.set_key_size(4048);
 
-        build.set_key_path("D://workstation/expo/rust/fdb/cert/keys/key.pem".to_string());
-        build.set_certificate_path("D://workstation/expo/rust/fdb/cert/keys/cert.pem".to_string());
-        build.set_key_size(4048);
+    build.issuer.set_country("IN".to_string());
+    build.issuer.set_state("UP".to_string());
+    build.issuer.set_location("GZB".to_string());
+    build.issuer.set_org("DAACHI".to_string());
+    build.issuer.set_common_name("https://daachi.in".to_string());
 
-        build.issuer.set_country("IN".to_string());
-        build.issuer.set_state("UP".to_string());
-        build.issuer.set_location("GZB".to_string());
-        build.issuer.set_org("DAACHI".to_string());
-        build.issuer.set_common_name("https://daachi.in".to_string());
+    build.subject.set_country("IN".to_string());
+    build.subject.set_state("UP".to_string());
+    build.subject.set_location("GZB".to_string());
+    build.subject.set_org("DAACHI".to_string());
+    build.subject.set_common_name("127.0.0.1".to_string());
 
-        build.subject.set_country("IN".to_string());
-        build.subject.set_state("UP".to_string());
-        build.subject.set_location("GZB".to_string());
-        build.subject.set_org("DAACHI".to_string());
-        build.subject.set_common_name("127.0.0.1".to_string());
+    //println!("build : {:?}",build);
 
-        //println!("build : {:?}",build);
-
-        match create(&mut build) {
-            Ok(_)=>{
-                common::log("ssl files created successfully");
-            },
-            Err(_)=>{
-                common::error("failed to create ssl files");
-            }
+    match generate_as_files(&mut build) {
+        Ok(_)=>{
+            common::log("ssl files created successfully");
+        },
+        Err(_)=>{
+            common::error("failed to create ssl files");
         }
-
     }
 
 }
 
-fn create(config:&mut builder::Builder) -> Result<(),String> {
+#[derive(Debug, Clone)]
+pub struct Generated {
+    pub cert:Vec<u8>,
+    pub key:Vec<u8>
+}
+
+pub fn generate_as_files(config:&mut builder::Builder) -> Result<(),String> {
+
+    match generate_as_vec(config) {
+        Ok(r)=>{
+
+            match make_file(config.certificate_path.clone(),r.cert) {
+                Ok(_)=>{},
+                Err(_)=>{
+                    return Err(common::error("failed to write x509 certificate"));
+                }
+            }
+
+            match make_file(config.key_path.clone(),r.key) {
+                Ok(_)=>{},
+                Err(_)=>{
+                    return Err(common::error("failed to write rsa private key"));
+                }
+            }
+
+            return Ok(());
+
+        },
+        Err(e)=>{
+            println!("error : {:}",e);
+            return Err(common::error("failed-generate_as_vec-generate_as_files"));
+        }
+    }
+
+}
+
+pub fn generate_as_vec(config:&mut builder::Builder) -> Result<Generated,String> {
 
     match openssl::rsa::Rsa::generate(config.key_size) {
         Ok(keys)=> {
@@ -237,28 +266,12 @@ fn create(config:&mut builder::Builder) -> Result<(),String> {
                 }
             }
 
-            //***************************************************
-            //write files
+            let result = Generated {
+                cert:certificate_as_u8_vec,
+                key:private_key_as_u8_vec
+            };
 
-            if true {
-
-                match make_file(config.certificate_path.clone(),certificate_as_u8_vec) {
-                    Ok(_)=>{},
-                    Err(_)=>{
-                        return Err(common::error("failed to write x509 certificate"));
-                    }
-                }
-
-                match make_file(config.key_path.clone(),private_key_as_u8_vec) {
-                    Ok(_)=>{},
-                    Err(_)=>{
-                        return Err(common::error("failed to write rsa private key"));
-                    }
-                }
-
-            }
-
-            return Ok(());
+            return Ok(result);
 
         },
         Err(e) => {
@@ -285,6 +298,46 @@ fn make_file(path:String,data:Vec<u8>) -> Result<(),String> {
         Err(e) => {
             return Err(common::error_string(format!("!!! failed - create to file at => {:?} , Error => {:?}",&path,e)));
         }
+    }
+
+}
+
+#[cfg(test)]
+mod test {
+    use crate;
+
+    #[test]
+    fn test(){
+
+        let mut build = Builder::new();
+
+        build.set_key_path("D://workstation/expo/rust/fdb/cert/keys/key.pem".to_string());
+        build.set_certificate_path("D://workstation/expo/rust/fdb/cert/keys/cert.pem".to_string());
+        build.set_key_size(4048);
+
+        build.issuer.set_country("IN".to_string());
+        build.issuer.set_state("UP".to_string());
+        build.issuer.set_location("GZB".to_string());
+        build.issuer.set_org("DAACHI".to_string());
+        build.issuer.set_common_name("https://daachi.in".to_string());
+
+        build.subject.set_country("IN".to_string());
+        build.subject.set_state("UP".to_string());
+        build.subject.set_location("GZB".to_string());
+        build.subject.set_org("DAACHI".to_string());
+        build.subject.set_common_name("127.0.0.1".to_string());
+
+        //println!("build : {:?}",build);
+
+        match generate_as_files(&mut build) {
+            Ok(_)=>{
+                common::log("ssl files created successfully");
+            },
+            Err(_)=>{
+                common::error("failed to create ssl files");
+            }
+        }
+
     }
 
 }
