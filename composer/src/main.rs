@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate lazy_static;
+
 extern crate clap;
 use clap::{Arg, App};
 
@@ -17,7 +20,7 @@ mod starter;
 //-------------
 //init fdb
 
-//cargo run -- -p=akku -d=d://workstation/expo/rust/fdb/instance -c=d://workstation/expo/rust/fdb/instance/fdb.json --init
+cargo run -- -p=akku -d=d://workstation/expo/rust/fdb/instance -c=d://workstation/expo/rust/fdb/instance/fdb.json --init
 
 */
 

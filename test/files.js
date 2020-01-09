@@ -15,6 +15,17 @@ let actor = {
   sig:'XW5L4OBPjuRcLhNUAvi40mOG3RdeJ6Pb'
 };
 
+let composer = {
+  ip:'127.0.0.1',
+  id:'aXjD1ulK7VDP7yZRtmjVkbL6tMCUIhi5',
+  sig:'XW5L4OBPjuRcLhNUAvi40mOG3RdeJ6Pb'
+};
+
+let node = {
+  id:'aXjD1ulK7VDP7yZRtmjVkbL6tMCUIhi5',
+  sig:'XW5L4OBPjuRcLhNUAvi40mOG3RdeJ6Pb'
+};
+
 let session = {
   id:'XW5L4OBPjuRcLhNUAvi40mOG3RdeJ6Pb',
   sig:'aXjD1ulK7VDP7yZRtmjVkbL6tMCUIhi5'
@@ -25,7 +36,7 @@ cargo run -- --secure=Om2lPq84vgIhsPEhWsh3LdRmNmI2MXpQ --signature=XW5L4OBPjuRcL
 " --session_id=XW5L4OBPjuRcLhNUAvi40mOG3RdeJ6Pb --session_signature=aXjD1ulK7VDP7yZRtmjVkbL6tMCUIhi5 --base_dir=d://workstation/expo/rust/fdb/composer/instance --port=8081 --composer=127.0.0.1
 */
 
-if(false){
+if(true){
   write_url = 'http://127.0.0.1:8088/write/encrypted';
   read_url = 'http://127.0.0.1:8088/read/encrypted';
   location = 'vault';
@@ -67,13 +78,13 @@ async function list(){
 
   console.log(">>> fetching list = " + location);
 
-  const result = await request.post({
-    uri:'http://127.0.0.1:8088/list',
+  const result = await send({
+    url:'http://127.0.0.1:8088/list',
     body:{
       location:location
     },
-    json:true
-  });
+    type:'master'
+  },false);
 
   let fetched = now();
 
@@ -267,7 +278,8 @@ async function write(object,log){
     body:{
       file:object.uid,
       data:object
-    }
+    },
+    type:'master'
   });
 
   if(log){
@@ -299,8 +311,9 @@ async function read(id,log){
     url:read_url,
     body:{
       file:id
-    }
-  });
+    },
+    type:'master'
+  },false);
 
   if(log){
     console.log(
@@ -319,29 +332,36 @@ async function read(id,log){
 
 }
 
-async function check(){
-  send({
-    url:check_url,
-    body:{},
-    type:'master'
-  },true);
+async function check(no){
+  if(!no){
+    no = 1;
+  }
+  for(let i=0;i<no;i++){
+    send({
+      url:check_url,
+      body:{},
+      type:'master'
+    },true,true);
+  }
 }
 
 async function kill(){
   send({
     url:kill_url,
     body:{},
-    type:'master'
-  },true);
+    type:'node'
+  },true,true);
 }
 
-async function send(data,log){
+async function send(data,log,track){
 
   let time = now();
   let ruid = uid();
   let base_sig = md5(actor.sig + session.sig);
   let request_sig = md5(time + ruid + base_sig);
   let body_sig = md5(JSON.stringify(data.body) + base_sig);
+  let node_sig = md5(time + ruid + node.sig);
+  let master_sig = md5(time + ruid + composer.sig);
 
   let build = {
     uri:data.url,
@@ -353,18 +373,33 @@ async function send(data,log){
     if(data.type == 'master'){
       build.headers = {
         fdb_app_type:'master',
-        session:session.id,
         timestamp:time,
         ruid:ruid,
-        req_signature:request_sig,
-        body_signature:body_sig
+        composer_id:composer.id,
+        req_signature:master_sig
+      };
+    }
+    if(data.type == 'node'){
+      build.headers = {
+        fdb_app_type:'node',
+        timestamp:time,
+        ruid:ruid,
+        req_signature:node_sig,
+        node_id:node.id
       };
     }
   }
 
+  //console.log(build);
+
   const result = await request.post(build);
   if(log){
     console.log(result);
+  }
+
+  if(track){
+    let final = (now() - time) / 1000;
+    console.log("completed in  : " + final + " secs");
   }
 
   if(result){

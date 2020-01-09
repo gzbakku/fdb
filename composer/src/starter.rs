@@ -1,6 +1,8 @@
-use std::process::{Command, Stdio};
+use std::process::Command;
+use std::collections::HashMap;
 use crate::common;
 use crate::io;
+use json;
 
 #[derive(Debug)]
 pub struct Actor {
@@ -21,7 +23,7 @@ pub fn init(e:&io::Extracted) -> Result<Vec<Actor>,String> {
     common::log("base directory verified");
 
     let mut collect_actors = Vec::new();
-    let mut composer_address:String = String::from("127.0.0.1:8080");
+    //let mut composer_address:String = String::from("127.0.0.1:8080");
     let mut built = true;
     for object in config["actors"].members() {
 
@@ -49,9 +51,9 @@ pub fn init(e:&io::Extracted) -> Result<Vec<Actor>,String> {
             None=>{built = false;common::error("failed-parse_actor-type");break;}
         };
 
-        if &fmt.r#type == &"composer".to_string() {
-            composer_address = format!("127.0.0.1:{}",fmt.port);
-        }
+        // if &fmt.r#type == &"composer".to_string() {
+        //     composer_address = format!("127.0.0.1:{}",fmt.port);
+        // }
 
         collect_actors.push(fmt);
 
@@ -61,15 +63,16 @@ pub fn init(e:&io::Extracted) -> Result<Vec<Actor>,String> {
         return Err(common::error("failed-parse_actors"));
     }
 
-    let session = common::new_session();
+    let session = &e.session;
+    let composer = &e.composer;
+    let node = &e.node;
 
     let app_dir = io::app_dir();
     let mut started = true;
     for a in &collect_actors {
-        match start_actor(a,&secure,&base_dir,&app_dir,&session,&composer_address) {
+        match start_actor(a,&secure,&base_dir,&app_dir,&session,&composer,&node) {
             Ok(_)=>{},
             Err(_) => {
-                println!("{:?}",a);
                 common::error("actor failed to initiate");
                 started = false;
                 break;
@@ -87,19 +90,21 @@ pub fn init(e:&io::Extracted) -> Result<Vec<Actor>,String> {
 
 }
 
-fn start_actor(actor:&Actor,secure:&String,base_dir:&String,app_dir:&String,session:&common::SESSION,composer:&String) -> Result<(),String> {
-
-    //println!("actor : {:?}",actor);
+fn start_actor(actor:&Actor,secure:&String,base_dir:&String,app_dir:&String,session:&io::Session,composer:&io::Composer,node:&io::Node) -> Result<(),String> {
 
     if actor.r#type == "files".to_string() {
 
-        //println!("app_dir : {:?}",&app_dir);
+        let actor_path = format!(
+            "{}{} --secure={} --actor_signature={} --actor_id={} --session_id={} --session_signature={} --node_signature={} --node_id={} --node_port={} --composer_signature={} --composer_id={} --composer_ip={} --composer_port={} --base_dir={} --port={}",
+                &app_dir,&actor.r#type,&secure,
+                &actor.sig,&actor.id,
+                &session.id,&session.sig,
+                &node.sig,&node.id,&node.port,
+                &composer.sig,&composer.id,&composer.ip,&composer.port,
+                &base_dir,&&actor.port
+        );
 
-        let actor_path = format!("{}{} --secure={} --signature={} --id={} --session_id={} --session_signature={} --base_dir={} --port={} --composer={}",&app_dir,&actor.r#type,&secure,&actor.sig,&actor.id,&session.id,&session.sig,&base_dir,&&actor.port,&composer);
-
-        //println!("actor_path : {:?}",&actor_path);
-
-        println!("");println!("");println!("");
+        //println!("{}",&actor_path);
 
         match
         Command::new("cmd")
@@ -107,8 +112,15 @@ fn start_actor(actor:&Actor,secure:&String,base_dir:&String,app_dir:&String,sess
         .arg(&actor_path)
         .spawn()
         {
-            Ok(mut process)=>{
-                println!("process : {:?}",process);
+            Ok(_)=>{
+                match check_actor(&actor,&node) {
+                    Ok(_)=>{
+                        return  Ok(());
+                    },
+                    Err(_)=>{
+                        return Err(common::error("failed-check_actor"));
+                    }
+                }
             },
             Err(e) => {
                 println!("failed to spawn process e : {:?}",e);
@@ -119,6 +131,48 @@ fn start_actor(actor:&Actor,secure:&String,base_dir:&String,app_dir:&String,sess
     }
 
     Ok(())
+
+}
+
+fn check_actor(actor:&Actor,node:&io::Node) -> Result<(),String> {
+
+    let ruid = common::uid();
+    let timestamp:String;
+    match common::time::now() {
+        Ok(r)=>{timestamp = r;},
+        Err(_)=>{
+            return Err(common::error("failed-fetch_timestamp"));
+        }
+    }
+
+    let url = format!("http://127.0.0.1:{}/check",actor.port);
+
+    let req_signature = common::hash(format!("{}{}{}",&timestamp,&ruid,&node.sig));
+
+    let mut headers = HashMap::new();
+    headers.insert("fdb_app_type","node".to_string());
+    headers.insert("timestamp",timestamp);
+    headers.insert("ruid",ruid);
+    headers.insert("node_id",node.id.clone());
+    headers.insert("req_signature",req_signature);
+
+    let obj = json::object!{
+        "req_type" => "check"
+    };
+
+    match common::request::post::object(url,obj,headers) {
+        Ok(r)=>{
+            if r.success == false {
+                return Err(common::error("failed-check_actor_request"));
+            } else {
+                common::log_string(format!("actor checked : {:?}",actor.r#type));
+                return Ok(());
+            }
+        },
+        Err(_)=>{
+            return Err(common::error("failed-send_check_actor_request"));
+        }
+    }
 
 }
 

@@ -1,48 +1,50 @@
 {
   "actors": [
     {
-      "id": "reKjEBwB4GcvvPBDX4lGkWBAnNRJM2Je",
-      "port": 5200,
-      "signature": "tJfm4DNEnGAeXmx4iSU4cHtZ4vM02ieM",
+      "id": "vNihJNPRjaKmYQgIdZZD7lepnVORUeEI",
+      "port": 7200,
+      "signature": "Rz8FwcLerXc9aOg3Ykzj7yfwzF4DNxUX",
       "type": "node"
     },
     {
-      "id": "E0DkR3NyATihWP7EujnB6QW6tOKQhb6n",
-      "port": 5201,
-      "signature": "ZweLjh9SzEVCoGR4HOOWGdoPkHIJVBLh",
+      "id": "ohc7UT0f5DfO0pFJjxSdXrmhkSCRYycd",
+      "port": 7201,
+      "signature": "Pd7mqxMyLS3HJvtBmIzRvPMtxL0bqPCO",
       "type": "files"
     },
     {
-      "id": "JvLg3bw4XPpR8tRQ0UU20GIl25S98vgu",
-      "port": 5202,
-      "signature": "OTwmZrdfZQNKhsjhUVO4j6fWQkaQfgu0",
+      "id": "mGmfArukVtPDkuLtdF1PrfXO7KADzSJV",
+      "port": 7202,
+      "signature": "BwdWqJ5un1M4ti8V3iW2lgpy6sDswr47",
       "type": "list"
     },
     {
-      "id": "2CS6zXsq5i5NhuTNVGNoxQgPboHdHeXA",
-      "port": 5203,
-      "signature": "WREQdEzEuM5Bc7vecvtTsf7KNcY1weN0",
+      "id": "nuXK48B8CzHB50xGN52JvEwKOxDsd568",
+      "port": 7203,
+      "signature": "Q9nMV9FiRrUA4lUUVNNMeN466GHlyGYw",
       "type": "dictionary"
     },
     {
-      "id": "SHXYm5PgyOPDvFbd9T9yWUmHU7BsRMt5",
-      "port": 5204,
-      "signature": "QqJzvferitwvCJI9NdN3KMISLUPPa7Ev",
+      "id": "x6mNnNWzFZ1VW0P35EnJX6iIEginh0Uh",
+      "port": 7204,
+      "signature": "CDvEnSZo1PgTuwba7o2LnoCbicUGetxM",
       "type": "users"
     }
   ],
   "app": "fdb",
-  "auth_signature": "b1c71c47ac83e710eac9b2f63e139d41",
+  "auth_signature": "5715c401acb0b616e4eba67bb8a1030d",
   "base_directory_location": "d://workstation/expo/rust/fdb/",
-  "composer_id": "null",
-  "composer_ip": "103.214.60.17",
-  "device_id": "RBgVXYwE904MjrzB4GXyxm9rMmGT4VQD",
-  "device_signature": "YLT5wMrGUwOi2IpeXlWS3rsZwj7uQJC0",
-  "instance_id": "DSeiY26Bg6FkjUgsyT9PQDnbQpxLF6nL",
-  "instance_signature": "kvfp9GgwgVjPVkQxMTd2pPPjYVGVYS8B",
-  "node_id": "4eYkmaOPqWJ2uW1ChvYkXNclDG5p4ryv",
-  "node_ip": "103.214.61.242",
-  "node_signature": "oDYeQloxYw9xfpOhWNfiCf13jcRL0y2R",
-  "timestamp": "1576925417441",
+  "composer_id": "ZVr6JWQFH0xmb7G9EM21zSvDw2l1LCQA",
+  "composer_ip": "103.214.60.140",
+  "composer_signature": "VU7XCIzZj79wTc3ZiZq4RPW1JJHL7QlT",
+  "device_id": "8PNryBbnn9oLdgGVXuyxQoldXL4wZ2ss",
+  "device_signature": "PNVVxc2UE625Nszgf4kwPAsZwypS4gSC",
+  "instance_id": "KlZbwQHiIfZCR0SXnzQEWpzC9vqXKDxI",
+  "instance_signature": "OC26hdphRg0tae4zXzaEf57lMDBOnTZT",
+  "node_id": "CLcA8UfzmAT5mkFekkdZkCEgDwSps3co",
+  "node_ip": "127.0.0.1",
+  "node_port": 7201,
+  "node_signature": "A2LEoFvDsz3B1PmBwh8KJ6VLOFGFAxbc",
+  "timestamp": "1578480128769",
   "type": "node"
 }

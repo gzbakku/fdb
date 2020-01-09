@@ -126,6 +126,7 @@ pub fn init(base_ip:&String,base_password:&String,base_dir_location:&String,conf
     config["type"] = serde_json::to_value("composer".to_string()).unwrap();
     config["composer_ip"] = serde_json::to_value(ip).unwrap();
     config["composer_id"] = serde_json::to_value(common::uid()).unwrap();
+    config["composer_signature"] = serde_json::to_value(common::uid()).unwrap();
     config["device_id"] = serde_json::to_value(common::uid()).unwrap();
     config["device_signature"] = serde_json::to_value(common::uid()).unwrap();
     config["instance_id"] = serde_json::to_value(common::uid()).unwrap();
@@ -144,19 +145,23 @@ pub fn init(base_ip:&String,base_password:&String,base_dir_location:&String,conf
         "users"
      ];
 
-     let available_ports = get_ports(actors.len());
+     let available_ports = get_ports(actors.len(),5200);
      let mut assigned_actors = Vec::new();
      let mut port_index:usize = 0;
      for a in &actors {
          let mut port_base = json!({});
          port_base["type"] = serde_json::to_value(a).unwrap();
-         port_base["port"] = serde_json::to_value(available_ports[port_index]).unwrap();
+         let assigned_port = available_ports[port_index];
+         port_base["port"] = serde_json::to_value(assigned_port).unwrap();
          let actor_id: String = common::uid();
          port_base["id"] = serde_json::to_value(actor_id).unwrap();
          let actor_signature: String = common::uid();
          port_base["signature"] = serde_json::to_value(actor_signature).unwrap();
          port_index += 1;
          assigned_actors.push(port_base);
+         if a == &"composer" {
+             config["composer_port"] = serde_json::to_value(assigned_port).unwrap();
+         }
      }
 
      config["actors"] = serde_json::to_value(assigned_actors).unwrap();
@@ -282,6 +287,7 @@ pub fn node(base_ip:&String,base_password:&String,base_dir_location:&String,conf
     node["instance_signature"] = serde_json::to_value(config["instance_signature"].to_string()).unwrap();
     node["instance_id"] = serde_json::to_value(config["instance_id"].to_string()).unwrap();
     node["composer_id"] = serde_json::to_value(config["composer_id"].to_string()).unwrap();
+    node["composer_signature"] = serde_json::to_value(config["composer_signature"].to_string()).unwrap();
     node["composer_ip"] = serde_json::to_value(config["composer_ip"].to_string()).unwrap();
 
     match common::time::now() {
@@ -327,7 +333,7 @@ pub fn node(base_ip:&String,base_password:&String,base_dir_location:&String,conf
        "users"
     ];
 
-    let available_ports = get_ports(actors.len());
+    let available_ports = get_ports(actors.len(),7200);
     let mut assigned_actors = Vec::new();
     let mut port_index:usize = 0;
     for a in &actors {
@@ -340,6 +346,9 @@ pub fn node(base_ip:&String,base_password:&String,base_dir_location:&String,conf
         port_base["signature"] = serde_json::to_value(actor_signature).unwrap();
         port_index += 1;
         assigned_actors.push(port_base);
+        if a == &"node" {
+            node["node_port"] = serde_json::to_value(available_ports[port_index]).unwrap();
+        }
     }
 
     node["actors"] = serde_json::to_value(assigned_actors).unwrap();
@@ -392,9 +401,9 @@ pub fn node(base_ip:&String,base_password:&String,base_dir_location:&String,conf
 
 }
 
-fn get_ports(how_many:usize) -> Vec<u16> {
+fn get_ports(how_many:usize,num:u16) -> Vec<u16> {
     let mut available : Vec<u16> = Vec::new();
-    let mut last : u16 = 5200;
+    let mut last : u16 = num;
     while available.len() <= how_many {
         match TcpListener::bind(("127.0.0.1", last)) {
             Ok(_) => {

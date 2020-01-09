@@ -1,11 +1,18 @@
 [package]
-name = "cert"
-version = "0.1.0"
+name = "easy_ssl"
+version = "0.0.1"
 authors = ["gzbakku <gzbakku@gmail.com>"]
 edition = "2018"
+
+description = "this is a rust lib to create x509 ssl certificate and private key file via an api and can be used in other rust projects."
+homepage = "https://github.com/gzbakku/fdb/tree/master/cert"
+repository = "https://github.com/gzbakku/fdb/tree/master/cert"
+readme = "README.md"
+keywords = ["ssl", "openssl","certificate","api","generate","rsa","cryptograpgy","public","private"]
+license-file = "License.md"
+license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 openssl = "0.10.26"
-clap = "2.33.0"

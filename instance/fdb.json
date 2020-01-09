@@ -107,18 +107,18 @@
   "nodes": [
     {
       "app": "fdb",
-      "auth_signature": "b1c71c47ac83e710eac9b2f63e139d41",
+      "auth_signature": "433ba78637abe7e7c46b3c9eeed6c179",
       "base_directory_location": "d://workstation/expo/rust/fdb/",
       "composer_id": "null",
       "composer_ip": "103.214.60.17",
-      "device_id": "RBgVXYwE904MjrzB4GXyxm9rMmGT4VQD",
-      "device_signature": "YLT5wMrGUwOi2IpeXlWS3rsZwj7uQJC0",
+      "device_id": "DddOM9p6hOmjG0jkOQW770J3x9ZIVomQ",
+      "device_signature": "ikIBg8megEly9jgwyBxWKFR9kWzIY4rZ",
       "instance_id": "DSeiY26Bg6FkjUgsyT9PQDnbQpxLF6nL",
       "instance_signature": "kvfp9GgwgVjPVkQxMTd2pPPjYVGVYS8B",
-      "node_id": "4eYkmaOPqWJ2uW1ChvYkXNclDG5p4ryv",
-      "node_ip": "103.214.61.242",
-      "node_signature": "oDYeQloxYw9xfpOhWNfiCf13jcRL0y2R",
-      "timestamp": "1576925417441",
+      "node_id": "BjI6edtp3qhEDEV0WkwBFbeFhwSddiin",
+      "node_ip": "127.0.0.1",
+      "node_signature": "gnuqW0iSsU4UmdOnbeDFKGmgBWvRMbY3",
+      "timestamp": "1577723722812",
       "type": "node"
     }
   ]
