@@ -7,7 +7,7 @@ this is a rust lib to create x509 ssl certificate and private key file via an ap
 put the crate name and version in your cargo.toml file
 
 ```bash
-easy_ssl = "0.0.3"
+easy_ssl = "0.0.4"
 ```
 
 ## Usage
