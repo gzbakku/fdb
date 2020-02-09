@@ -29,10 +29,15 @@ fn handler(req: Request) -> Result<Response,String> {
     }
 }
 
+fn auth(token:server::auth::Token) -> bool {
+    println!("token : {:?}",token);
+    return true;
+}
+
 fn main(){
     let key = "8cfb30b34977529853bbe46afdbbd5ae".to_string();
     let address = String::from("127.0.0.1:5200");
-    server::init(address,key,handler);
+    server::init(address,key,handler,auth);
 }
 
 ```
@@ -43,36 +48,31 @@ fn main(){
 
 use postoffice::client::{get_test_message,get_random_connection_id,start_connection,send_message};
 
-let key = "8cfb30b34977529853bbe46afdbbd5ae".to_string();
-let connection_id = client::get_random_connection_id();
-let addr = "127.0.0.1:5200".to_string();
+fn main(){
 
-match start_connection(&connection_id,addr,key) {
-   Ok(_)=>{
-       //println!("connection establishged");
-   },
-   Err(_)=>{
-       common::error("failed start connection");
-   }
-}
+  let key = "8cfb30b34977529853bbe46afdbbd5ae".to_string();
+  let connection_id = client::get_random_connection_id();
+  let addr = "127.0.0.1:5200".to_string();
 
-let message = get_test_message(8);
-match send_message(&connection_id, message.clone(), false) {
-   Ok(response)=>{
-    if response.message.contains(&message) {
-     if false {
-       println!("request successfull");
+  match start_connection(&connection_id,addr,key) {
+     Ok(_)=>{
+         //println!("connection establishged");
+     },
+     Err(_)=>{
+         common::error("failed start connection");
      }
-     if false {
-       println!("response final : {:#?}",response);
+  }
+
+  let message = get_test_message(8);
+  match send_message(&connection_id, message.clone(), false) {
+     Ok(response)=>{
+        println!("response final : {:#?}",response);
+      },
+     Err(_)=>{
+       common::error("request-failed");
      }
-     } else {
-       println!("response final : {:?}",response);
-     }
-    },
-   Err(_)=>{
-     common::error("request-failed");
-   }
+  }
+
 }
 
 ```
