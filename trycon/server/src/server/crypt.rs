@@ -18,6 +18,7 @@ pub struct ENCRYPTED {
     pub cipher:Vec<u8>
 }
 
+#[allow(dead_code)]
 pub fn encrypt(i_data:String,i_key:String) -> ENCRYPTED {
 
     let key = GenericArray::clone_from_slice(i_key.as_bytes());
@@ -39,6 +40,7 @@ pub fn encrypt(i_data:String,i_key:String) -> ENCRYPTED {
 
 }
 
+#[allow(dead_code)]
 pub fn decrypt(data:Vec<u8>,i_key:&Vec<u8>,i_iv:Vec<u8>) -> Result<String,String> {
 
     let key = GenericArray::clone_from_slice(i_key);
@@ -61,7 +63,5 @@ pub fn decrypt(data:Vec<u8>,i_key:&Vec<u8>,i_iv:Vec<u8>) -> Result<String,String
             return Err("failed-to_decrypt-decrypt-crypt".to_string());
         }
     }
-
-
 
 }

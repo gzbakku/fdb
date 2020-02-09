@@ -1,6 +1,5 @@
 use std::net::{TcpListener, TcpStream, SocketAddr, Shutdown};
 use std::io::{Write,Read};
-use std::io;
 use std::time::Duration;
 use std::thread;
 use base64::{decode,encode};
@@ -22,7 +21,9 @@ pub struct Response {
     pub message:String
 }
 
+#[allow(dead_code)]
 impl Response {
+    #[allow(dead_code)]
     pub fn ok(req:Request) -> Response {
         Response {
             action:"none",
@@ -30,6 +31,7 @@ impl Response {
             message:format!("OK {} none\r\n",req.req_id)
         }
     }
+    #[allow(dead_code)]
     pub fn new(req:Request,m:String) -> Result<Response,String> {
         let encoded_message = encode(&m.as_bytes());
         return Ok(
@@ -40,6 +42,7 @@ impl Response {
             }
         );
     }
+    #[allow(dead_code)]
     pub fn bad(req:Request) -> Response {
         Response {
             action:"none",
@@ -47,6 +50,7 @@ impl Response {
             message:format!("BAD {} undefined\r\n",req.req_id)
         }
     }
+    #[allow(dead_code)]
     pub fn error(req:Request,e:String) -> Response {
         Response {
             action:"none",
@@ -54,6 +58,7 @@ impl Response {
             message:format!("BAD {} {}\r\n",req.req_id,e)
         }
     }
+    #[allow(dead_code)]
     pub fn quit(req:Request) -> Response {
         Response {
             action:"quit",
@@ -98,8 +103,14 @@ fn handle_client(stream:&mut TcpStream,key:&Vec<u8>,handler:  fn(Request) -> Res
             peer = addr;
         },
         Err(_)=>{
-            stream.write(b"BAD - get_peer\r\n");
-            stream.write(b"BYE\r\n");
+            match stream.write(b"BAD - get_peer\r\n") {
+                Ok(_)=>{},
+                Err(_)=>{}
+            }
+            match stream.write(b"BYE\r\n") {
+                Ok(_)=>{},
+                Err(_)=>{}
+            }
             match stream.shutdown(Shutdown::Both) {
                 Ok(_)=>{},
                 Err(_)=>{}
@@ -123,7 +134,7 @@ fn handle_client(stream:&mut TcpStream,key:&Vec<u8>,handler:  fn(Request) -> Res
         let buffer_ref = [0; 32];
         let mut buffer = [0; 32];
         match stream.read(&mut buffer) {
-            Ok(read_result)=>{
+            Ok(_)=>{
                 if buffer_ref != buffer {
                     let mut collect_cleaned_buffer = Vec::new();
                     for byte in buffer.iter() {
@@ -149,32 +160,42 @@ fn handle_client(stream:&mut TcpStream,key:&Vec<u8>,handler:  fn(Request) -> Res
                                         line.push_str(&vec[0].to_string());
                                         if line.contains("\r\n"){
                                             let line_vec = line.split("\r\n").collect::<Vec<&str>>();
-                                            let line_vec_len = line_vec.len();
-                                            let mut line_vec_index = 0;
                                             for line_part in line_vec.iter() {
                                                 if line_part.len() > 0 {
                                                     let response = &run_request(&peer,line_part.to_string(),key,handler);
                                                     if &quit_ref == response {
-                                                        stream.write(b"BYE\r\n");
+                                                        match stream.write(b"BYE\r\n") {
+                                                            Ok(_)=>{},
+                                                            Err(_)=>{}
+                                                        }
                                                         match stream.shutdown(Shutdown::Both) {
                                                             Ok(_)=>{},
                                                             Err(_)=>{}
                                                         }
                                                     } else {
-                                                        stream.write(response);
+                                                        match stream.write(response) {
+                                                            Ok(_)=>{},
+                                                            Err(_)=>{}
+                                                        }
                                                     }
                                                 }
                                             }
                                         } else {
                                             let response = &run_request(&peer,line,key,handler);
                                             if &quit_ref == response {
-                                                stream.write(b"BYE\r\n");
+                                                match stream.write(b"BYE\r\n") {
+                                                    Ok(_)=>{},
+                                                    Err(_)=>{}
+                                                }
                                                 match stream.shutdown(Shutdown::Both) {
                                                     Ok(_)=>{},
                                                     Err(_)=>{}
                                                 }
                                             } else {
-                                                stream.write(response);
+                                                match stream.write(response) {
+                                                    Ok(_)=>{},
+                                                    Err(_)=>{}
+                                                }
                                             }
                                         }
                                     }
@@ -188,13 +209,19 @@ fn handle_client(stream:&mut TcpStream,key:&Vec<u8>,handler:  fn(Request) -> Res
                                         if index != 0 && index < (vec_len - 1) && incoming.len() > 0 {
                                             let response = &run_request(&peer,incoming.to_string(),key,handler);
                                             if &quit_ref == response {
-                                                stream.write(b"BYE\r\n");
+                                                match stream.write(b"BYE\r\n") {
+                                                    Ok(_)=>{},
+                                                    Err(_)=>{}
+                                                }
                                                 match stream.shutdown(Shutdown::Both) {
                                                     Ok(_)=>{},
                                                     Err(_)=>{}
                                                 }
                                             } else {
-                                                stream.write(response);
+                                                match stream.write(response) {
+                                                    Ok(_)=>{},
+                                                    Err(_)=>{}
+                                                }
                                             }
                                         }
 
@@ -204,13 +231,19 @@ fn handle_client(stream:&mut TcpStream,key:&Vec<u8>,handler:  fn(Request) -> Res
                                     line.push_str(&vec[0].to_string());
                                     let response = &run_request(&peer,line,key,handler);
                                     if &quit_ref == response {
-                                        stream.write(b"BYE\r\n");
+                                        match stream.write(b"BYE\r\n") {
+                                            Ok(_)=>{},
+                                            Err(_)=>{}
+                                        }
                                         match stream.shutdown(Shutdown::Both) {
                                             Ok(_)=>{},
                                             Err(_)=>{}
                                         }
                                     } else {
-                                        stream.write(response);
+                                        match stream.write(response) {
+                                            Ok(_)=>{},
+                                            Err(_)=>{}
+                                        }
                                     }
                                 }
                             } else {
@@ -220,7 +253,10 @@ fn handle_client(stream:&mut TcpStream,key:&Vec<u8>,handler:  fn(Request) -> Res
                             }
                         },
                         Err(_)=>{
-                            stream.write(b"BAD failed-parse_string_from_buffer\r\n");
+                            match stream.write(b"BAD failed-parse_string_from_buffer\r\n") {
+                                Ok(_)=>{},
+                                Err(_)=>{}
+                            }
                         }
                     }//buffer to stirng converstion
                 } else { //make buffer to ref buffer

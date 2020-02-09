@@ -5,7 +5,7 @@ use std::thread;
 use std::thread::JoinHandle;
 //use std::time::Duration;
 
-use std::time::{Duration, Instant};
+use std::time::{Instant};
 
 mod client;
 
@@ -24,7 +24,10 @@ fn main(){
     }
 
     for i in collect {
-        i.join();
+        match i.join() {
+            Ok(_)=>{},
+            Err(_)=>{}
+        }
     }
 
     let duration = initial.elapsed();
@@ -55,7 +58,10 @@ fn start() {
     }
 
     for t in threads {
-        t.join();
+        match t.join() {
+            Ok(_)=>{},
+            Err(_)=>{}
+        }
     }
 
     //thread::sleep(Duration::from_millis(5000));

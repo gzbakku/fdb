@@ -6,14 +6,6 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-description = "this is a light weight tcp connection manager, including client and server side functions to communicate at high speed long living stable connctions with message que."
-homepage = "https://github.com/gzbakku/fdb/tree/master/postoffice"
-repository = "https://github.com/gzbakku/fdb/tree/master/postoffice"
-readme = "README.md"
-keywords = ["tcp", "message","server","client","socket"]
-categories = ["Server", "tcp", "api-bindings"]
-license-file = "License.md"
-
 [dependencies]
 base64 = "0.11.0"
 aes-gcm = "0.3.0"

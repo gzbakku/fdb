@@ -18,7 +18,7 @@ pub fn get_requests(id:&String) -> Result<Vec<Request>,String>{
                 }
             }
         },
-        Err(e)=>{
+        Err(_)=>{
             return Err(String::from("failed-lock_REQUESTS"));
         }
     }
@@ -62,16 +62,7 @@ pub fn parse(line:String,key:&String) -> Result<Response,String> {
     }
 
     let one = vec[0];
-    let two:&str;
-    let three:&str;
     let parts = vec.len();
-    let message_decoded:String;
-    if parts > 1 {
-        two = vec[1];
-    }
-    if parts > 2 {
-        three = vec[2];
-    }
 
     if one != "OK" && one != "BAD" && one != "BYE" {
         return Err("invalid-response_type".to_string());

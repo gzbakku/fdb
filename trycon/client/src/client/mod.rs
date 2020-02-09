@@ -2,7 +2,7 @@ use lazy_static;
 
 use std::sync::Mutex;
 
-use std::net::{TcpStream,Shutdown};
+use std::net::{TcpStream};
 use std::io::{Read,Write};
 use rand::{thread_rng, Rng};
 use rand::distributions::Alphanumeric;
@@ -14,6 +14,8 @@ use base64::encode;
 mod crypt;
 mod comm;
 pub mod common;
+
+//#[allow(dead_code)]
 
 #[derive(Clone, Debug)]
 pub struct Request {
@@ -41,7 +43,9 @@ pub struct Response {
     pub request:Request
 }
 
+#[allow(dead_code)]
 impl Response {
+    #[allow(dead_code)]
     pub fn new(req:Request,message:String) -> Response {
         Response {
             result:true,
@@ -51,6 +55,7 @@ impl Response {
             request:req
         }
     }
+    #[allow(dead_code)]
     pub fn error(req:Request,e:String) -> Response {
         Response {
             result:false,
@@ -129,13 +134,10 @@ pub fn send_message(id_base:&String,message:String,secure:bool) -> Result<Respon
         }
 
         let mut index:u16 = 0;
-        let mut fetched = false;
-        let response_holder:Response;
         loop {
             match comm::poll_response(&req_id) {
                 Ok(mut response)=>{
                     response.request = request;
-                    fetched = true;
                     return Ok(response);
                 },
                 Err(_)=>{}
@@ -148,11 +150,7 @@ pub fn send_message(id_base:&String,message:String,secure:bool) -> Result<Respon
             thread::sleep(Duration::from_millis(30));
         }
 
-        if fetched == false {
-            return Err("timeout".to_string());
-        } else {
-            return Err("failed-loop_for_polling".to_string());
-        }
+        return Err("timeout".to_string());
 
     });
 
@@ -250,7 +248,7 @@ fn handle_connection(stream:&mut TcpStream,connection_id:String,key:String){
         let buffer_ref = [0; 32];
         let mut buffer = [0; 32];
         match stream.read(&mut buffer) {
-            Ok(read_result)=>{
+            Ok(_)=>{
                 if buffer_ref != buffer {
                     let mut collect_cleaned_buffer = Vec::new();
                     for byte in buffer.iter() {
@@ -276,8 +274,6 @@ fn handle_connection(stream:&mut TcpStream,connection_id:String,key:String){
                                         }
                                         if line.contains("\r\n"){
                                             let line_vec = line.split("\r\n").collect::<Vec<&str>>();
-                                            let line_vec_len = line_vec.len();
-                                            let mut line_vec_index = 0;
                                             for line_part in line_vec.iter() {
                                                 if line_part.len() > 0 {
                                                     process_response(line_part.to_string(),&key);
@@ -308,7 +304,10 @@ fn handle_connection(stream:&mut TcpStream,connection_id:String,key:String){
                             }
                         },
                         Err(_)=>{
-                            stream.write(b"BAD failed-parse_string_from_buffer\r\n");
+                            match stream.write(b"BAD failed-parse_string_from_buffer\r\n") {
+                                Ok(_)=>{},
+                                Err(_)=>{}
+                            }
                         }
                     }//buffer to stirng converstion
 
