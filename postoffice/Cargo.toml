@@ -1,6 +1,6 @@
 [package]
 name = "postoffice"
-version = "0.0.11"
+version = "0.0.12"
 authors = ["gzbakku <gzbakku@gmail.com>"]
 edition = "2018"
 
@@ -11,7 +11,7 @@ homepage = "https://github.com/gzbakku/fdb/tree/master/postoffice"
 repository = "https://github.com/gzbakku/fdb/tree/master/postoffice"
 readme = "README.md"
 keywords = ["tcp", "message","server","client","socket"]
-categories = ["Server", "tcp", "api-bindings"]
+categories = ["web-programming::http-server", "web-programming::http-client", "api-bindings","web-programming::websocket"]
 license-file = "License.md"
 
 [dependencies]
