@@ -1,9 +1,6 @@
-#[macro_use]
-extern crate lazy_static;
-
 use std::thread;
 use std::thread::JoinHandle;
-//use std::time::Duration;
+use std::time::Duration;
 
 use std::time::{Instant};
 
@@ -17,7 +14,7 @@ fn main(){
 
     let mut collect = Vec::new();
 
-    for _ in 0..10 {
+    for _ in 0..1 {
         collect.push(thread::spawn(move || {
             start();
         }));
@@ -49,6 +46,12 @@ fn start() {
         Err(_)=>{
             common::error("failed start connection");
         }
+    }
+
+    thread::sleep(Duration::from_millis(100000));
+
+    if true {
+        return;
     }
 
     let mut threads = Vec::new();

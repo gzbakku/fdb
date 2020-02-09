@@ -1,6 +1,6 @@
 [package]
 name = "postoffice"
-version = "0.0.12"
+version = "0.0.13"
 authors = ["gzbakku <gzbakku@gmail.com>"]
 edition = "2018"
 
@@ -20,3 +20,5 @@ aes-gcm = "0.3.0"
 rand = "0.7.2"
 md5 = "0.7.0"
 lazy_static = "1.4.0"
+hmac = "0.7.1"
+sha2 = "0.8.1"

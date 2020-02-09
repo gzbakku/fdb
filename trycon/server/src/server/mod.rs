@@ -5,6 +5,8 @@ use std::thread;
 use base64::{decode,encode};
 mod crypt;
 
+pub mod auth;
+
 #[derive(Debug)]
 pub struct Request {
     pub r#type:String,
@@ -68,7 +70,7 @@ impl Response {
     }
 }
 
-pub fn init(address:String,key:String,handler:  fn(Request) -> Result<Response,String> ) {
+pub fn init(address:String,key:String,handler:  fn(Request) -> Result<Response,String>,guard: fn(auth::Token) -> bool ) {
 
     let key_converted = key.as_bytes().to_vec();
 
@@ -79,7 +81,7 @@ pub fn init(address:String,key:String,handler:  fn(Request) -> Result<Response,S
                 match listen {
                     Ok(mut stream)=>{
                         thread::spawn(move || {
-                            handle_client(&mut stream,&key_clone,handler);
+                            handle_client(&mut stream,&key_clone,handler,guard);
                         });
                     },
                     Err(_)=>{
@@ -94,7 +96,42 @@ pub fn init(address:String,key:String,handler:  fn(Request) -> Result<Response,S
     }
 }
 
-fn handle_client(stream:&mut TcpStream,key:&Vec<u8>,handler:  fn(Request) -> Result<Response,String> ) {
+fn handle_client(stream:&mut TcpStream,key:&Vec<u8>,handler:  fn(Request) -> Result<Response,String>,guard: fn(auth::Token) -> bool  ) {
+
+    let key_as_string:String;
+    match String::from_utf8(key.clone()) {
+        Ok(parsed)=>{
+            key_as_string = parsed.to_string();
+        },
+        Err(_)=>{
+            println!("!!! failed key as vec of u8 to string convertion for auth function");
+            return;
+        }
+    }
+
+    match auth::init(stream,key_as_string) {
+        Ok(token)=>{
+            if guard(token) == false {
+                println!("guard denied access");
+                match stream.shutdown(Shutdown::Both) {
+                    Ok(_)=>{},
+                    Err(_)=>{}
+                }
+                return;
+            } else {
+                match stream.write(b"WLCM\r\n") {
+                    Ok(_)=>{},
+                    Err(_)=>{}
+                }
+            }
+        },
+        Err(_)=>{
+            match stream.write(b"BYE BAD_AUTH\r\n") {
+                Ok(_)=>{},
+                Err(_)=>{}
+            }
+        }
+    }
 
     let peer:SocketAddr;
     let quit_ref = "quit".as_bytes().to_vec();

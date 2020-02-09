@@ -1,8 +1,8 @@
-use lazy_static;
+use lazy_static::lazy_static;
 
 use std::sync::Mutex;
 
-use std::net::{TcpStream};
+use std::net::{TcpStream,Shutdown};
 use std::io::{Read,Write};
 use rand::{thread_rng, Rng};
 use rand::distributions::Alphanumeric;
@@ -14,6 +14,7 @@ use base64::encode;
 mod crypt;
 mod comm;
 pub mod common;
+mod auth;
 
 //#[allow(dead_code)]
 
@@ -208,7 +209,10 @@ pub fn start_connection(id:&String,address:String,key:String) -> Result<(),Strin
         Ok(mut r)=>{
             let id_holder = id.to_string();
             thread::spawn(move || {
-                handle_connection(&mut r,id_holder,key);
+                match do_auth(&mut r,id_holder,key) {
+                    Ok(_)=>{},
+                    Err(_)=>{}
+                }
             });
             return Ok(());
         },
@@ -218,7 +222,28 @@ pub fn start_connection(id:&String,address:String,key:String) -> Result<(),Strin
     }
 }
 
+fn do_auth(stream:&mut TcpStream,connection_id:String,key:String) -> Result<(),String> {
+
+    match auth::init(stream,&connection_id,key.clone()) {
+        Ok(_)=>{
+            handle_connection(stream, connection_id, key);
+            return Ok(());
+        },
+        Err(e)=>{
+            match stream.shutdown(Shutdown::Both) {
+                Ok(_)=>{},
+                Err(_)=>{}
+            }
+            println!("!!! auth error : {:?}",e);
+            return Err("auth failed".to_string());
+        }
+    }
+
+}
+
 fn handle_connection(stream:&mut TcpStream,connection_id:String,key:String){
+
+    println!("connection initiated");
 
     match stream.set_read_timeout(Some(Duration::from_millis(10))) {
         Ok(_)=>{},
