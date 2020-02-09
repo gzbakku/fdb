@@ -1,6 +1,6 @@
 use crate::common;
 use crate::crypt;
-use std::fs::File;
+use std::fs::{File,create_dir_all};
 use std::io::Read;
 use json::JsonValue;
 use std::path::Path;
@@ -49,11 +49,12 @@ pub struct Composer {
     pub port:String
 }
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct Node {
     pub id:String,
     pub sig:String,
-    pub port:String
+    pub port:String,
+    pub ip:String
 }
 
 #[derive(Debug)]
@@ -80,7 +81,7 @@ impl Extracted {
     }
 }
 
-pub fn read_config(config_location:String,password:String) -> Result<Extracted,String> {
+pub fn read_config(config_location:&String,password:String) -> Result<Extracted,String> {
 
     let cipher:Vec<u8>;
     let nonce:Vec<u8>;
@@ -108,13 +109,15 @@ pub fn read_config(config_location:String,password:String) -> Result<Extracted,S
                                             let mut node = Node {
                                                 id:r["composer_id"].clone(),
                                                 sig:r["composer_signature"].clone(),
-                                                port:r["composer_port"].clone()
+                                                port:r["composer_port"].clone(),
+                                                ip:r["composer_ip"].clone()
                                             };
 
                                             if r["type"] == "node" {
                                                 match extract_from_node(&config) {
                                                     Ok(nr)=>{
                                                         node.id = nr["node_id"].clone();
+                                                        node.ip = nr["node_ip"].clone();
                                                         node.port = nr["node_port"].clone();
                                                         node.sig = nr["node_signature"].clone()
                                                     },
@@ -188,13 +191,13 @@ pub fn extract_from_config(config:&JsonValue) -> Result<HashMap<String,String>,S
 
 fn extract_from_node(config:&JsonValue) -> Result<HashMap<String,String>,String> {
 
-    let extract_these = ["node_id","node_port","node_signature"];
+    let extract_these = ["node_id","node_port","node_signature","node_ip"];
 
     extract_from_json(config,extract_these.to_vec())
 
 }
 
-fn extract_from_json(config:&JsonValue,extract_these:Vec<&str>) -> Result<HashMap<String,String>,String> {
+pub fn extract_from_json(config:&JsonValue,extract_these:Vec<&str>) -> Result<HashMap<String,String>,String> {
 
     let mut collect = HashMap::new();
 
@@ -224,6 +227,18 @@ fn extract_from_json(config:&JsonValue,extract_these:Vec<&str>) -> Result<HashMa
 
     Ok(collect)
 
+}
+
+pub fn ensure_dir(p:&String) -> Result<(),String> {
+    match create_dir_all(p) {
+        Ok(_)=>{
+            return Ok(());
+        },
+        Err(e)=>{
+            println!("Error : {:?}",e);
+            return Err(common::error("failed-create_dir_all-ensure_dir"));
+        }
+    }
 }
 
 pub fn check_path(path:&String) -> bool {

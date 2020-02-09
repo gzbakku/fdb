@@ -1,9 +1,10 @@
 use crate::io::Extracted;
 use crate::common;
+use crate::ssl::SSL;
 
 mod server;
 
-pub fn init(e:&Extracted){
+pub fn init(e:&Extracted,ssl:&SSL){
 
     common::log("initiating composer");
 

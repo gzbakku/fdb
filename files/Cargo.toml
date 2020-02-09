@@ -10,10 +10,10 @@ edition = "2018"
 clap = "2.33.0"
 reqwest = "0.9.24"
 
-actix-web = "1.0.0"
+#actix-web = "1.0.0"
 actix-service = "0.4.2"
 
-#actix-web = { version = "1.0.0", features = ["openssl"] }
+actix-web = { version = "1.0.0", features = ["ssl"] }
 
 #actix-web = { version = "2.0", features = ["openssl"] }
 #actix-service = "1.0.1"

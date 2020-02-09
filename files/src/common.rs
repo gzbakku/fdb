@@ -32,6 +32,12 @@ pub fn error(e:&str) -> String {
 }
 
 #[allow(dead_code)]
+pub fn error_format(e:String) -> String {
+    println!("!!! {}",e);
+    e
+}
+
+#[allow(dead_code)]
 pub fn question(e:&str){
     println!("");
     println!("??? ..............................");

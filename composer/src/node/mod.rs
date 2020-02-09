@@ -1,6 +1,7 @@
 use crate::io::Extracted;
+use crate::ssl::SSL;
 
-pub fn init(e:&Extracted){
+pub fn init(e:&Extracted,_ssl:&SSL){
 
     println!("password : {:?}",e.password);
 

@@ -8,7 +8,7 @@ let run = "cargo run -- --secure=Om2lPq84vgIhsPEhWsh3LdRmNmI2MXpQ " +
 "--composer_signature=XW5L4OBPjuRcLhNUAvi40mOG3RdeJ6Pb --composer_id=aXjD1ulK7VDP7yZRtmjVkbL6tMCUIhi5 --composer_ip=127.0.0.1 --composer_port=5200 " +
 "--session_id=XW5L4OBPjuRcLhNUAvi40mOG3RdeJ6Pb --session_signature=aXjD1ulK7VDP7yZRtmjVkbL6tMCUIhi5 " +
 "--base_dir=d://workstation/expo/rust/fdb/composer/instance " +
-"--port=8088 --private_key=D://workstation/expo/rust/fdb/files/keys/key.pem --public_key=D://workstation/expo/rust/fdb/files/keys/cert.pem";
+"--port=8088 --key_path=D://workstation/expo/rust/fdb/cert/keys/key.pem --cert_path=D://workstation/expo/rust/fdb/cert/keys/cert.pem";
 
 //total flags = 14
 

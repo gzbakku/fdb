@@ -1,8 +1,12 @@
 
+use std::fs::File;
+use std::io::{Write,Read};
+
 use std::fs::{ read_dir, create_dir_all, copy};
 use std::env;
 use json::JsonValue;
 use std::path::Path;
+use crate::common;
 
 pub mod crypted;
 pub mod files;
@@ -34,19 +38,11 @@ pub fn backup(location:String,file_name:String,file_type:String) -> Result<(),St
 pub fn make_base_dirs(current_dir:&String) -> Result<(),String> {
 
     let base_dir_main = format!("{}/files/",current_dir);
-    let base_dir_files = format!("{}/files/files/",current_dir);
     let base_dir_list = format!("{}/files/list/",current_dir);
-    let base_dir_vault = format!("{}/files/vault/",current_dir);
     let base_dir_backup = format!("{}/files/backup/",current_dir);
+    let base_dir_collections = format!("{}/files/collections/",current_dir);
 
     match create_dir_all(&base_dir_main) {
-        Ok(_r) => {},
-        Err(e) => {
-            return Err(e.to_string());
-        }
-    }
-
-    match create_dir_all(&base_dir_files) {
         Ok(_r) => {},
         Err(e) => {
             return Err(e.to_string());
@@ -60,14 +56,14 @@ pub fn make_base_dirs(current_dir:&String) -> Result<(),String> {
         }
     }
 
-    match create_dir_all(&base_dir_vault) {
+    match create_dir_all(&base_dir_backup) {
         Ok(_r) => {},
         Err(e) => {
             return Err(e.to_string());
         }
     }
 
-    match create_dir_all(&base_dir_backup) {
+    match create_dir_all(&base_dir_collections) {
         Ok(_r) => {},
         Err(e) => {
             return Err(e.to_string());
@@ -134,4 +130,63 @@ fn parse(location:String) -> String {
         holder.push(item.to_string());
     }
     return holder[0].to_string();
+}
+
+pub fn write(dir_path:String,file_path:String,data_as_json:JsonValue) -> Result<(),String> {
+
+    let mut clone = data_as_json.clone();
+
+    match create_dir_all(&dir_path) {
+        Ok(_r) => {},
+        Err(e) => {
+            return Err(common::error_format(format!("failed-create_dir_all-files-io error : {:?}",e)));
+        }
+    }
+
+    match File::create(&file_path) {
+        Ok(mut r) => {
+            match clone.write(&mut r) {
+                Ok(_r) => {
+                    return Ok(());
+                },
+                Err(e) => {
+                    return Err(common::error_format(format!("failed-write_file-files-io error : {:?}",e)));
+                }
+            }
+        },
+        Err(e) => {
+            return Err(common::error_format(format!("failed-create_file-files-io error : {:?}",e)));
+        }
+    }
+
+}
+
+pub fn read(file_path:String) -> Result<JsonValue,String> {
+
+    let mut buffer = Vec::new();
+    match File::open(&file_path) {
+        Ok(mut r) => {
+            match r.read_to_end(&mut buffer) {
+                Ok(_r) => {},
+                Err(e) => {
+                    println!("!!! failed-read_file-read-files-io error : {:?} file_path : {:?}",e,file_path);
+                    return Err("!!! failed-read_file-read-files-io".to_string());
+                }
+            }
+        },
+        Err(e) => {
+            println!("!!! failed-open_file-read-files-io error : {:?} file_path : {:?}",e,file_path);
+            return Err("!!! failed-open_file-read-files-io".to_string());
+        }
+    }
+
+    match json::parse(std::str::from_utf8(&buffer).unwrap()) {
+        Ok(data) => {
+            return Ok(data);
+        },
+        Err(e) => {
+            return Err(common::error("failed-parse_json"));
+        },
+    }
+
 }

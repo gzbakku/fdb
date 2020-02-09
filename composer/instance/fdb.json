@@ -125,5 +125,8 @@
       "timestamp": "1578480128769",
       "type": "node"
     }
-  ]
+  ],
+  "ssl_certificate_file_path": "d://workstation/expo/rust/fdb/composer/instance/ssl/cert.pem",
+  "ssl_key_file_path": "d://workstation/expo/rust/fdb/composer/instance/ssl/key.pem",
+  "ssl_certificate_timestamp": "1578580209526"
 }

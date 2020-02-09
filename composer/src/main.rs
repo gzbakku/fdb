@@ -14,6 +14,7 @@ mod io;
 mod composer;
 mod node;
 mod starter;
+mod ssl;
 
 /*
 
@@ -301,9 +302,9 @@ fn main() {
             return;
         }
 
-        match io::read_config(config_file_location,password) {
+        match io::read_config(&config_file_location,password) {
             Ok(r) => {
-                let config = &r.config;
+                let config = &r.config.clone();
                 if config.has_key("app") == false {
                     common::error("not a fdb config file. No Key Named App Found.");
                     return;
@@ -316,18 +317,27 @@ fn main() {
                     common::error("not a fdb config file. No Key Named App Found.");
                     return;
                 }
-                if
-                    config["type"].to_string() != "node".to_string() &&
-                    config["type"].to_string() != "composer".to_string()
-                {
-                    common::error("not a fdb config file. Invalid App Type node/composer.");
-                    return;
-                }
-                if config["type"].to_string() == "node".to_string() {
-                    node::init(&r);
-                }
-                if config["type"].to_string() == "composer".to_string() {
-                    composer::init(&r);
+                //check ssl setup
+                match ssl::check(config,&r.node.clone(),&config_file_location) {
+                    Ok(ssl_paths)=>{
+                        if
+                            config["type"].to_string() != "node".to_string() &&
+                            config["type"].to_string() != "composer".to_string()
+                        {
+                            common::error("not a fdb config file. Invalid App Type node/composer.");
+                            return;
+                        }
+                        if config["type"].to_string() == "node".to_string() {
+                            node::init(&r,&ssl_paths);
+                        }
+                        if config["type"].to_string() == "composer".to_string() {
+                            composer::init(&r,&ssl_paths);
+                        }
+                    },
+                    Err(_)=>{
+                        common::error("faiuled to check config file for ssl setup");
+                        return;
+                    }
                 }
             },
             Err(_) => {
@@ -337,46 +347,3 @@ fn main() {
         }
 
 }
-
-/******************************************************************
-
-common protocol
-----------------------------------------
-
-check if base dir exists
-
-check if config file exists
-
-******************************************************************/
-
-/******************************************************************
-
-procedure for base composer
-----------------------------------------
-
-//take the password
-
-//decrypt config file
-
-//parse as json
-
-//start the composing server
-
-    //make the base key distributer
-
-    //make the service chart distributer
-
-//start the appropriate services with file input
-
-//connect to foreign composers
-
-******************************************************************/
-
-/******************************************************************
-
-procedure for foreign composer
-----------------------------------------
-
-//start the appropriate services with file input
-
-******************************************************************/

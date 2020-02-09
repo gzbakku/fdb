@@ -11,7 +11,6 @@ readme = "README.md"
 keywords = ["ssl", "openssl","certificate","rsa","generate"]
 categories = ["cryptography", "api-bindings"]
 license-file = "License.md"
-license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

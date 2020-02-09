@@ -260,7 +260,7 @@ pub fn node(base_ip:&String,base_password:&String,base_dir_location:&String,conf
     let mut config;
     let password:String;
 
-    match crate::io::read_config(config_location.to_string(),base_password.to_string()) {
+    match crate::io::read_config(&config_location.to_string(),base_password.to_string()) {
         Ok(r)=>{
             config = r.config;
             password = r.password;
