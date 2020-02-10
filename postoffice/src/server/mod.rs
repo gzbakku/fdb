@@ -7,7 +7,7 @@ mod crypt;
 
 pub mod auth;
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct Request {
     pub r#type:String,
     pub req_id:String,
@@ -16,7 +16,7 @@ pub struct Request {
     pub raw:String
 }
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct Response {
     pub req_id:String,
     pub action:&'static str,
