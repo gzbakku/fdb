@@ -1,6 +1,5 @@
 use json::{JsonValue,parse};
-use postoffice::server::{Response,Request};
-use postoffice::client;
+use crate::{server,client};
 
 #[derive(Debug,Clone)]
 pub struct Resp {
@@ -86,7 +85,7 @@ pub fn parse_response(response:client::Response) -> Result<Resp,String> {
 }
 
 #[allow(dead_code)]
-pub fn get_body(req:&Request) -> Result<JsonValue,String> {
+pub fn get_body(req:&client::Request) -> Result<JsonValue,String> {
     match parse(&req.data) {
         Ok(parsed)=>{
             return Ok(parsed);
@@ -98,7 +97,7 @@ pub fn get_body(req:&Request) -> Result<JsonValue,String> {
 }
 
 #[allow(dead_code)]
-pub fn error(req:Request,error:String) -> Response {
+pub fn error(req:server::Request,error:String) -> server::Response {
     let mut object = JsonValue::new_object();
     match object.insert("result",false) {
         Ok(_)=>{},
@@ -112,7 +111,7 @@ pub fn error(req:Request,error:String) -> Response {
 }
 
 #[allow(dead_code)]
-pub fn ok(req:Request,) -> Response {
+pub fn ok(req:server::Request) -> Response {
     let mut object = JsonValue::new_object();
     match object.insert("result",true) {
         Ok(_)=>{},
@@ -122,7 +121,7 @@ pub fn ok(req:Request,) -> Response {
 }
 
 #[allow(dead_code)]
-pub fn data(req:Request,data:JsonValue) -> Response {
+pub fn data(req:server::Request,data:JsonValue) -> server::Response {
     let mut object = JsonValue::new_object();
     match object.insert("result",true) {
         Ok(_)=>{},
@@ -136,9 +135,9 @@ pub fn data(req:Request,data:JsonValue) -> Response {
 }
 
 #[allow(dead_code)]
-pub fn new_response(req:Request,data:JsonValue) -> Response {
+pub fn new_response(req:server::Request,data:JsonValue) -> server::Response {
     let data_as_string = data.dump();
-    match Response::new(req.clone(),data_as_string) {
+    match server::Response::new(req.clone(),data_as_string) {
         Ok(res)=>{
             return res;
         },
