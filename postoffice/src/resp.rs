@@ -107,21 +107,21 @@ pub fn error(req:server::Request,error:String) -> server::Response {
         Ok(_)=>{},
         Err(_)=>{}
     }
-    return new_response(req,object);
+    return new_response(req,object,false);
 }
 
 #[allow(dead_code)]
-pub fn ok(req:server::Request) -> Response {
+pub fn ok(req:server::Request) -> server::Response {
     let mut object = JsonValue::new_object();
     match object.insert("result",true) {
         Ok(_)=>{},
         Err(_)=>{}
     }
-    return new_response(req,object);
+    return new_response(req,object,false);
 }
 
 #[allow(dead_code)]
-pub fn data(req:server::Request,data:JsonValue) -> server::Response {
+pub fn data(req:server::Request,data:JsonValue,secure:bool) -> server::Response {
     let mut object = JsonValue::new_object();
     match object.insert("result",true) {
         Ok(_)=>{},
@@ -131,18 +131,18 @@ pub fn data(req:server::Request,data:JsonValue) -> server::Response {
         Ok(_)=>{},
         Err(_)=>{}
     }
-    return new_response(req,object);
+    return new_response(req,object,secure);
 }
 
 #[allow(dead_code)]
-pub fn new_response(req:server::Request,data:JsonValue) -> server::Response {
+pub fn new_response(req:server::Request,data:JsonValue,secure:bool) -> server::Response {
     let data_as_string = data.dump();
-    match server::Response::new(req.clone(),data_as_string) {
+    match server::Response::new(req.clone(),data_as_string,secure) {
         Ok(res)=>{
             return res;
         },
         Err(_)=>{
-            return Response::error(req,"make-new_response".to_string());
+            return server::Response::error(req,"make-new_response".to_string());
         }
     }
 }
