@@ -1,7 +1,5 @@
 use lazy_static::lazy_static;
-
 use std::sync::Mutex;
-
 use std::net::{TcpStream,Shutdown};
 use std::io::{Read,Write};
 use rand::{thread_rng, Rng};
@@ -9,7 +7,7 @@ use rand::distributions::Alphanumeric;
 use std::time::Duration;
 use std::thread;
 use std::collections::HashMap;
-use base64::encode;
+use base64::{encode};
 
 mod crypt;
 mod comm;

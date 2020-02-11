@@ -13,7 +13,8 @@ pub struct Request {
     pub req_id:String,
     pub data:String,
     pub peer:SocketAddr,
-    pub raw:String
+    pub raw:String,
+    pub key:Vec<u8>
 }
 
 #[derive(Debug,Clone)]
@@ -34,8 +35,13 @@ impl Response {
         }
     }
     #[allow(dead_code)]
-    pub fn new(req:Request,m:String) -> Result<Response,String> {
-        let encoded_message = encode(&m.as_bytes());
+    pub fn new(req:Request,m:String,secure:bool) -> Result<Response,String> {
+        let encoded_message:String;
+        if secure {
+            encoded_message = crypt::encode_encrypt_message(m,req.key);
+        } else {
+            encoded_message = encode(&m.as_bytes());
+        }
         return Ok(
             Response {
                 action:"none",
@@ -386,7 +392,6 @@ fn parse_request(line:String,peer:&SocketAddr,key:&Vec<u8>) -> Result<Request,St
         return Err("invalid-request_type".to_string());
     }
     if id.len() != 32 {
-
         return Err(format!("invalid-id_len => {}",id.len()));
     }
     let processed_data:String;
@@ -399,22 +404,26 @@ fn parse_request(line:String,peer:&SocketAddr,key:&Vec<u8>) -> Result<Request,St
         if data_vec_len != &2 {
             return Err("invalid-params".to_string());
         }
-        if data_vec[0].len() != 14 {
-            return Err("invalid-data_for_ecrt_request-invalid_nonce".to_string());
-        }
-        match decode(data_vec[1]) {
-            Ok(decoded)=>{
-                match crypt::decrypt(decoded, key, data_vec[0].as_bytes().to_vec()) {
-                    Ok(r)=>{
-                        processed_data = r;
+        match decode(data_vec[0]) {
+            Ok(nonce)=>{
+                match decode(data_vec[1]) {
+                    Ok(cipher)=>{
+                        match crypt::decrypt(cipher.to_vec(),&key,nonce.to_vec()) {
+                            Ok(r)=>{
+                                processed_data = r;
+                            },
+                            Err(_)=>{
+                                return Err("failed-decypt-decoded_base64_string".to_string());
+                            }
+                        }
                     },
                     Err(_)=>{
-                        return Err("failed-decypt-decoded_base64_string".to_string());
+                        return Err("failed-decode_cipher_base64".to_string());
                     }
                 }
             },
             Err(_)=>{
-                return Err("invalid-base64_string".to_string());
+                return Err("failed-decode_nonce_base64".to_string());
             }
         }
     } else {
@@ -442,7 +451,8 @@ fn parse_request(line:String,peer:&SocketAddr,key:&Vec<u8>) -> Result<Request,St
         data:processed_data,
         r#type:req_type.to_string(),
         peer:peer.clone(),
-        raw:line
+        raw:line,
+        key:key.clone()
     };
 
     return Ok(build);

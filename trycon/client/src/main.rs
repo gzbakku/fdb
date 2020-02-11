@@ -48,15 +48,14 @@ fn start() {
         }
     }
 
-    thread::sleep(Duration::from_millis(100000));
-
-    if true {
+    if false {
+        thread::sleep(Duration::from_millis(100000));
         return;
     }
 
     let mut threads = Vec::new();
 
-    for _ in 0..100 {
+    for _ in 0..1 {
         threads.push(send_test_message(&connection_id));
     }
 
@@ -77,16 +76,8 @@ fn send_test_message(id:&String) -> JoinHandle<()> {
         let message = get_test_message(8);
         match send_message(&connection_id, message.clone(), false) {
             Ok(response)=>{
-                if response.message.contains(&message) {
-                    if false {
-                        println!("request successfull");
-                    }
-                    if false {
-                        println!("response final : {:#?}",response);
-                    }
-                } else {
-                    println!("response final : {:?}",response);
-                }
+                //println!("request successfull");
+                //println!("response final : {:#?}",response);
             },
             Err(_)=>{
                 common::error("request-failed");

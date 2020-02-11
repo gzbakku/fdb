@@ -3,6 +3,7 @@ extern crate rand;
 use aes_gcm::Aes256Gcm; // Or `Aes128Gcm`
 use aes_gcm::aead::{Aead, NewAead, generic_array::GenericArray};
 use std::str;
+use base64::encode;
 
 //sample key = 8cfb30b34977529853bbe46afdbbd5ae
 //sample iv/nonce = /B?E(H+MbQeT
@@ -19,9 +20,18 @@ pub struct ENCRYPTED {
 }
 
 #[allow(dead_code)]
-pub fn encrypt(i_data:String,i_key:String) -> ENCRYPTED {
+pub fn encode_encrypt_message(message:String,key:Vec<u8>) -> String {
+    let encrypted = encrypt(message,key);
+    let nonce = encode(&encrypted.nonce);
+    let cipher = encode(&encrypted.cipher);
+    let message = format!("{}:{}",nonce,cipher);
+    return message;
+}
 
-    let key = GenericArray::clone_from_slice(i_key.as_bytes());
+#[allow(dead_code)]
+pub fn encrypt(i_data:String,i_key:Vec<u8>) -> ENCRYPTED {
+
+    let key = GenericArray::clone_from_slice(&i_key);
     let aead = Aes256Gcm::new(key);
 
     let my_data = i_data.as_bytes();

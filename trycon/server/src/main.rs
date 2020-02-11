@@ -4,9 +4,11 @@ use server::{Request,Response};
 
 fn handler(req: Request) -> Result<Response,String> {
 
-    let message = format!("hello client this is the server {}",req.data);
+    let message = format!("hello client this is the server");
 
-    match Response::new(req,message) {
+    //println!("request : {:?}",&req);
+
+    match Response::new(req,message,false) {
         Ok(res)=>{
             return Ok(res);
         },
@@ -19,7 +21,7 @@ fn handler(req: Request) -> Result<Response,String> {
 }
 
 fn auth(token:server::auth::Token) -> bool {
-    println!("token : {:?}",token);
+    //println!("token : {:?}",token);
     return true;
 }
 

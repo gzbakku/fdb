@@ -111,8 +111,9 @@ pub fn parse(line:String,key:&String) -> Result<Response,String> {
                         request:Request::new()
                     });
                 },
-                Err(_)=>{
-                    return Err("failed-decode-message_body".to_string());
+                Err(e)=>{
+                    let error = format!("failed-decode-message_body error : {}",e);
+                    return Err(error);
                 }
             }
         } else {
@@ -131,8 +132,9 @@ fn decode_body(line:String,key:&String) -> Result<String,String> {
             Ok(r)=>{
                 return Ok(r.to_string());
             },
-            Err(_)=>{
-                return Err(String::from("failed-decrypt_message"));
+            Err(e)=>{
+                let error = format!("failed-decrypt_message error : {}",e);
+                return Err(error);
             }
         }
     }
@@ -174,7 +176,7 @@ fn decrypt_message(line:&String,key:&String) -> Result<String,String> {
     }
 
     let cipher:Vec<u8>;
-    match decode(vec[0]) {
+    match decode(vec[1]) {
         Ok(cipher_as_array)=>{
             cipher = cipher_as_array.to_vec();
         },
@@ -189,8 +191,9 @@ fn decrypt_message(line:&String,key:&String) -> Result<String,String> {
         Ok(message)=>{
             return Ok(message);
         },
-        Err(_)=>{
-            return Err(String::from("failed-decrypt_decoded_cipher"));
+        Err(e)=>{
+            let error = format!("failed-decrypt_decoded_cipher : {}",e);
+            return Err(error);
         }
     }
 

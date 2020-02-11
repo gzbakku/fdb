@@ -1,7 +1,7 @@
 
 use postoffice::client;
 use json;
-
+mod resp;
 mod io;
 
 fn main() {
@@ -39,8 +39,6 @@ fn connect(data:json::JsonValue){
 
 fn send(connection_id:String,data:json::JsonValue){
 
-
-
     let mut request_object = json::JsonValue::new_object();
 
     match request_object.insert("type","insert") {
@@ -57,7 +55,18 @@ fn send(connection_id:String,data:json::JsonValue){
 
     match client::send_message(&connection_id,request_string,false) {
         Ok(response)=>{
-            println!("response : {:?}",response.message);
+
+            match resp::parse_response(response) {
+                Ok(result)=>{
+
+                    println!("result : {:?}",result);
+
+                },
+                Err(e)=>{
+                    println!("error parse response strucft : {:?}",e);
+                }
+            }
+
         },
         Err(_)=>{
             println!("request failed");

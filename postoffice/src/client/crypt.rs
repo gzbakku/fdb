@@ -18,6 +18,7 @@ pub struct ENCRYPTED {
     pub cipher:Vec<u8>
 }
 
+#[allow(dead_code)]
 pub fn encode_encrypt_message(message:String,key:String) -> String {
     let encrypted = encrypt(message,key);
     let nonce = encode(&encrypted.nonce);
@@ -26,6 +27,7 @@ pub fn encode_encrypt_message(message:String,key:String) -> String {
     return message;
 }
 
+#[allow(dead_code)]
 pub fn encrypt(i_data:String,i_key:String) -> ENCRYPTED {
 
     let key = GenericArray::clone_from_slice(i_key.as_bytes());
