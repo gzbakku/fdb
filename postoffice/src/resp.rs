@@ -10,10 +10,13 @@ pub struct Resp {
     pub is_there_data:bool
 }
 
+#[allow(dead_code)]
 impl Resp {
+    #[allow(dead_code)]
     fn check(me:&Self) -> bool {
         return me.result;
     }
+    #[allow(dead_code)]
     fn error(me:&Self) -> String {
         return me.error.clone();
     }
