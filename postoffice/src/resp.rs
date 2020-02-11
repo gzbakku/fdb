@@ -85,7 +85,7 @@ pub fn parse_response(response:client::Response) -> Result<Resp,String> {
 }
 
 #[allow(dead_code)]
-pub fn get_body(req:&client::Request) -> Result<JsonValue,String> {
+pub fn get_body(req:&server::Request) -> Result<JsonValue,String> {
     match parse(&req.data) {
         Ok(parsed)=>{
             return Ok(parsed);
