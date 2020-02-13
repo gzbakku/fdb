@@ -241,8 +241,6 @@ fn do_auth(stream:&mut TcpStream,connection_id:String,key:String) -> Result<(),S
 
 fn handle_connection(stream:&mut TcpStream,connection_id:String,key:String){
 
-    println!("connection initiated");
-
     match stream.set_read_timeout(Some(Duration::from_millis(10))) {
         Ok(_)=>{},
         Err(_)=>{}

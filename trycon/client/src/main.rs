@@ -14,7 +14,7 @@ fn main(){
 
     let mut collect = Vec::new();
 
-    for _ in 0..1 {
+    for _ in 0..100 {
         collect.push(thread::spawn(move || {
             start();
         }));
@@ -55,7 +55,7 @@ fn start() {
 
     let mut threads = Vec::new();
 
-    for _ in 0..1 {
+    for _ in 0..10 {
         threads.push(send_test_message(&connection_id));
     }
 
@@ -73,7 +73,7 @@ fn start() {
 fn send_test_message(id:&String) -> JoinHandle<()> {
     let connection_id = id.clone();
     let handle = thread::spawn(move || {
-        let message = get_test_message(8);
+        let message = get_test_message(800);
         match send_message(&connection_id, message.clone(), false) {
             Ok(response)=>{
                 //println!("request successfull");

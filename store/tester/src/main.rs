@@ -1,7 +1,5 @@
-
-use postoffice::client;
+use postoffice::{client,resp};
 use json;
-mod resp;
 mod io;
 
 fn main() {
@@ -41,7 +39,7 @@ fn send(connection_id:String,data:json::JsonValue){
 
     let mut request_object = json::JsonValue::new_object();
 
-    match request_object.insert("type","insert") {
+    match request_object.insert("type","write") {
         Ok(_)=>{},
         Err(_)=>{}
     }
