@@ -1,10 +1,7 @@
-use postoffice::{server,resp};
+use postoffice::{server,resp,common};
 use json::JsonValue;
 
-mod check;
-mod common;
-
-use check::{Field,Format};
+use postoffice::check::{Field,Format};
 
 fn main() {
     let key = "8cfb30b34977529853bbe46afdbbd5ae".to_string();
@@ -57,7 +54,7 @@ fn handler(req: server::Request) -> Result<server::Response,String> {
     ]);
 
     for entry in body["data"].entries() {
-        
+
         let data = entry.1;
         let users = &data["users"];
 
@@ -70,10 +67,6 @@ fn handler(req: server::Request) -> Result<server::Response,String> {
         }
 
     }
-
-
-
-    //println!("body : {:?}",&body);
 
     return Ok(resp::ok(req));
 
