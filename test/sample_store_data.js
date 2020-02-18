@@ -4,10 +4,10 @@ const number_of_users_per_collection = 5;
 const io = require('./io');
 
 let collection_paths = [
-  '/cities/delhi',
-  '/country/ghaziabad',
-  '/country/gurgoan',
-  '/country/noida',
+  'cities/delhi',
+  'cities/ghaziabad',
+  'cities/gurgoan',
+  'cities/noida',
 ];
 
 make_collections();
@@ -18,7 +18,7 @@ async function make_collections(){
     let collection = {
       id:md5(path),
       path:path,
-      users:make_users()
+      files:make_users()
     };
     collections[collection.id] = collection;
   }

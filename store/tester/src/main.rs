@@ -26,7 +26,9 @@ fn connect(data:json::JsonValue){
 
     match client::start_connection(&connection_id,addr,key) {
         Ok(_)=>{
-            send(connection_id,data);
+            for _ in 0..20 {
+                send(connection_id.clone(),data.clone());
+            }
         },
         Err(_)=>{
             println!("!!! failed to start connection");

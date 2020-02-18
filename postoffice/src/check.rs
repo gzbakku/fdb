@@ -80,6 +80,7 @@ fn make_error(e:&str,f:&Field) -> String {
     return error;
 }
 
+#[allow(dead_code)]
 fn make_error_str(e:String,f:&Field) -> String {
     let error = format!("{} field : {:?}",e,f);
     return error;
