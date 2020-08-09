@@ -6,6 +6,6 @@
     "keywords": ["rust", "actix"],
     "website": "https://github.com/emk/rust-buildpack-example-actix",
     "env": {
-      "BUILDPACK_URL": "https://buildpack-registry.s3.amazonaws.com/buildpacks/emk/rust.tgz"
+      "BUILDPACK_URL": "https://github.com/emk/heroku-buildpack-rust.git"
     }
   }
