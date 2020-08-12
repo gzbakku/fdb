@@ -73,6 +73,7 @@ impl Collection {
             }
         }
     }
+    #[allow(dead_code)]
     pub fn reader(self:&mut Self) -> Result<BufReader<File>,String> {
         match File::open(&self.path.clone()) {
             Ok(reader)=>{

@@ -5,12 +5,36 @@ use std::thread;
 
 mod client;
 
-use client::{start_connection,common,send_message,get_test_message};
+mod common;
+
+use client::{start_connection,send_message,get_test_message};
 
 use std::time::Duration;
 
 fn main(){
-    client();
+    if false {
+        client();
+    }
+
+    for _ in 0..1 {
+        commons();
+    }
+}
+
+fn commons(){
+
+    let uid = common::uid(8);
+
+    println!("uid : {:?}",&uid);
+
+    let hash_md5 = common::hash::md5(&uid);
+
+    println!("md5 : {:?}",hash_md5);
+
+    let hash_sha256 = common::hash::sha256(&uid);
+
+    println!("sha256 : {:?}",hash_sha256.len());
+
 }
 
 fn client(){
@@ -24,7 +48,7 @@ fn client(){
             println!("connection establishged");
         },
         Err(_)=>{
-            common::error("failed start connection");
+            client::common::error("failed start connection");
         }
     }
 
@@ -39,7 +63,7 @@ fn client(){
             }
         },
         Err(_)=>{
-            common::error("request-failed");
+            client::common::error("request-failed");
         }
     }
 

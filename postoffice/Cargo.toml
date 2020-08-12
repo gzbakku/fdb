@@ -1,6 +1,6 @@
 [package]
 name = "postoffice"
-version = "0.0.19"
+version = "0.0.20"
 authors = ["gzbakku <gzbakku@gmail.com>"]
 edition = "2018"
 
