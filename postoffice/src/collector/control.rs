@@ -143,6 +143,7 @@ pub fn update_control(base_dir:&String,control_path:&String,finished:Vec<String>
 
 #[allow(dead_code)]
 pub fn make_new_control(base_dir:String,control_path:String) -> Result<Control,String> {
+    println!("make new constrol");
     let collector_file = io::get_random_file_name();
     let collector_file_path = format!("{}/{}.fdbcs",base_dir,collector_file);
     if io::new_file(&collector_file_path) == false {

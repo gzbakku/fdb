@@ -2,6 +2,7 @@ use lazy_static::lazy_static;
 use std::sync::Mutex;
 use std::fs::{File};
 use std::io::Write;
+use std::{thread,time};
 
 mod looper;
 pub mod io;
@@ -80,6 +81,27 @@ pub struct Collections {
     pub flush:Vec<String>
 }
 
+#[derive(Debug,Clone,Copy)]
+pub struct Close {
+    pub switch:bool,
+    pub safe:bool
+}
+
+impl Close{
+    fn new()->Close{
+        Close{
+            switch:false,
+            safe:false
+        }
+    }
+    fn should_close(self)->bool{
+        return self.switch;
+    }
+    fn is_it_safe(self)->bool{
+        return self.safe;
+    }
+}
+
 lazy_static! {
     static ref COLLECTIONS: Mutex<Collections> = Mutex::new(Collections {
         reset:Vec::new(),
@@ -88,10 +110,24 @@ lazy_static! {
     static ref BASE_DIR: Mutex<BaseDir> = Mutex::new(BaseDir::new());
     static ref CONTROL: Mutex<Control> = Mutex::new(Control::new());
     static ref ACTIVE: Mutex<Collector> = Mutex::new(Collector::new());
+    static ref CLOSE: Mutex<Close> = Mutex::new(Close::new());
 }
 
 #[allow(dead_code)]
 pub fn insert(data:&String) -> Result<(),String> {
+
+    match CLOSE.lock() {
+        Ok(closer)=>{
+            if closer.should_close() {
+                return Err("collector is closed".to_string());
+            }
+        },
+        Err(_)=>{
+            println!("closer fetch error");
+            return Err("failed-lock_Closer-close_collector".to_string());
+        }
+    }
+
     let in_line = format!("{}\n",data);
     match ACTIVE.lock() {
         Ok(mut collector)=>{
@@ -165,5 +201,44 @@ pub fn init(path:String) -> Result<(),String> {
     looper::reset_loop(&path);
 
     return Ok(());
+
+}
+
+#[allow(dead_code)]
+pub fn close() -> Result<(),&'static str>{
+
+    match CLOSE.lock() {
+        Ok(mut closer)=>{
+            closer.switch = true;
+        },
+        Err(_)=>{
+            return Err("failed-lock_Closer-close_collector");
+        }
+    }
+
+    let handle:std::thread::JoinHandle<std::result::Result<(), &'static str>> = thread::spawn(move || {
+        loop {
+            match CLOSE.lock() {
+                Ok(closer)=>{
+                    if closer.is_it_safe() {
+                        return Ok(());
+                    }
+                },
+                Err(_)=>{
+                    println!("failed-lock_Closer-close_collector");
+                }
+            }
+            let sleep = time::Duration::from_millis(3000);
+            thread::sleep(sleep);
+        }
+    });
+    match handle.join() {
+        Ok(_)=>{
+            return Ok(());
+        },
+        Err(_)=>{
+            return Err("failed-close-collector");
+        }
+    }
 
 }

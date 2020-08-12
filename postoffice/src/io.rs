@@ -94,6 +94,7 @@ pub fn read(path:&String) -> Result<String,String> {
     }
 }
 
+#[allow(dead_code)]
 pub fn delete_file(path:String) -> Result<(),String> {
     match remove_file(path) {
         Ok(_)=>{

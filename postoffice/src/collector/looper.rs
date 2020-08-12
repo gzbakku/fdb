@@ -1,4 +1,4 @@
-use crate::collector::{ACTIVE,CONTROL,control,COLLECTIONS,Collections,BASE_DIR};
+use crate::collector::{ACTIVE,CONTROL,control,COLLECTIONS,Collections,BASE_DIR,CLOSE};
 use std::thread;
 use std::time::Duration;
 
@@ -15,6 +15,18 @@ pub fn reset_loop(base_dir_ref:&String){
             }
             if check_if_writen() == false || false {
                 reset(&base_dir);
+            }
+            match CLOSE.lock() {
+                Ok(mut closer)=>{
+                    if closer.should_close(){
+                        thread::sleep(Duration::from_millis(3000));
+                        closer.safe = true;
+                        return;
+                    }
+                },
+                Err(_)=>{
+                    println!("failed-lock_Closer-close_collector");
+                }
             }
             thread::sleep(Duration::from_millis(5000));
         }
@@ -36,7 +48,7 @@ fn process_collection_edits() -> Result<(),String> {
     let edits:Collections;
     match COLLECTIONS.lock() {
         Ok(e)=>{
-            if e.reset.len() == 0 && e.flush.len() == 0 {
+            if e.flush.len() == 0 {
                 return Ok(());
             }
             edits = e.clone();
@@ -58,10 +70,6 @@ fn process_collection_edits() -> Result<(),String> {
         Err(_)=>{
             return Err("failed-lock_CONTROL_mutex".to_string());
         }
-    }
-
-    for coll in &edits.reset {
-        base_collections.push(coll.to_string());
     }
 
     let mut index = 0;

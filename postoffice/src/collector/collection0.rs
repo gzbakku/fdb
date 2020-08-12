@@ -15,6 +15,8 @@ pub fn set_collection_action(action:&str,name:String) -> Result<(),String>{
         Ok(mut collections)=>{
             if action == "flush" {
                 collections.flush.push(name);
+            } else if action == "reset" {
+                collections.reset.push(name);
             } else {
                 return Err("invalid-action".to_string());
             }
@@ -31,6 +33,26 @@ pub fn set_collection_action(action:&str,name:String) -> Result<(),String>{
 #[allow(dead_code)]
 impl Collection {
     #[allow(dead_code)]
+    pub fn reset(self:&mut Self) -> Result<(),String> {
+        match CONTROL.lock() {
+            Ok(mut control)=>{
+                    control.finished.push(self.name.clone());
+            },
+            Err(_)=>{
+                return Err("failed-lock_CONTROL_mutex".to_string());
+            }
+        }
+        match set_collection_action("reset",self.name.clone()) {
+            Ok(_)=>{
+                return Ok(());
+            },
+            Err(e)=>{
+                let error = format!("failed-set_collection_action=>{}",e);
+                return Err(error);
+            }
+        }
+    }
+    #[allow(dead_code)]
     pub fn flush(self:&mut Self) -> Result<(),String> {
         if true {
             match io::delete_file(self.path.clone()) {
@@ -38,18 +60,6 @@ impl Collection {
                 Err(e)=>{
                     let error = format!("failed-flush_collection=>{}",e);
                     return Err(error);
-                }
-            }
-        }
-        if true {
-            match CONTROL.lock() {
-                Ok(mut control)=>{
-                        if control.finished.len() > 0{
-                            control.finished.remove(0);
-                        }
-                },
-                Err(_)=>{
-                    return Err("failed-lock_ACTIVE_mutex".to_string());
                 }
             }
         }
@@ -93,11 +103,12 @@ pub fn get(read:bool) -> Result<Collection,String> {
 
     let collection_name:String;
     match CONTROL.lock() {
-        Ok(control)=>{
+        Ok(mut control)=>{
                 if control.finished.len() == 0{
                     return Err("no_collections_found".to_string());
                 }
                 collection_name = control.finished[0].to_string();
+                control.finished.remove(0);
         },
         Err(_)=>{
             return Err("failed-lock_ACTIVE_mutex".to_string());
@@ -105,6 +116,8 @@ pub fn get(read:bool) -> Result<Collection,String> {
     }
 
     let path = format!("{}/{}.fdbcs",&base_dir,&collection_name);
+
+
 
     let mut collect = Vec::new();
     if read {
@@ -116,29 +129,6 @@ pub fn get(read:bool) -> Result<Collection,String> {
                 }
             },
             Err(e)=>{
-                //ensure file if not flush this File
-                if !io::check_path(&path){
-                    match CONTROL.lock() {
-                        Ok(mut control)=>{
-                                if control.finished.len() > 0{
-                                    control.finished.remove(0);
-                                }
-                        },
-                        Err(_)=>{
-                            return Err("failed-lock_ACTIVE_mutex".to_string());
-                        }
-                    }
-                    match set_collection_action("flush",collection_name) {
-                        Ok(_)=>{
-                            let error = format!("failed-absent_collection_file-reseting_collection");
-                            return Err(error);
-                        },
-                        Err(e)=>{
-                            let error = format!("failed-absent_collection_file_reset_with_flush=>{}",e);
-                            return Err(error);
-                        }
-                    }
-                }
                 let error = format!("failed-read_collection_file=>{}=>{}",&path,e);
                 return Err(error);
             }
