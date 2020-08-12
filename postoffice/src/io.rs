@@ -3,6 +3,7 @@ use std::path::Path;
 use std::fs::{create_dir_all,File,read_to_string,remove_file};
 use std::io::Write;
 use rand::{thread_rng, Rng};
+use rand::distributions::Alphanumeric;
 
 #[allow(dead_code)]
 pub fn cwd() -> String {
