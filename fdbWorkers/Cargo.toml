@@ -1,0 +1,18 @@
+[package]
+name = "fdbWorkers"
+version = "0.1.0"
+authors = ["gzbakku <gzbakku@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+description = "this is a common libabry for fdb workers."
+homepage = "https://github.com/gzbakku/fdb/tree/master/postoffice"
+repository = "https://github.com/gzbakku/fdb/tree/master/postoffice"
+readme = "README.md"
+keywords = ["fdb", "workers"]
+categories = ["web-programming::http-server", "web-programming::http-client", "api-bindings","web-programming::websocket"]
+license-file = "License.md"
+
+[dependencies]
+json = "0.12.1"

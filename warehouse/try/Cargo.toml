@@ -1,5 +1,5 @@
 [package]
-name = "store"
+name = "try"
 version = "0.1.0"
 authors = ["gzbakku <gzbakku@gmail.com>"]
 edition = "2018"
@@ -7,8 +7,6 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-postoffice = "0.0.19"
-json = "0.12.1"
-lazy_static = "1.4.0"
-rand = "0.7.2"
-md5 = "0.7.0"
+postoffice = "0.0.22"
+json = "0.12.4"
+futures = "0.3.5"

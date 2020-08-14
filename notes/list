@@ -1,0 +1,51 @@
+
+
+//list workers
+
+//single item list structure
+{
+  type:'map',
+  pointer:'data',
+  id:'sd897fs897f89sdf',
+  data:'fsdf089sdf_sd8s7df8970sf_sdf789789'
+}
+
+//multi item list structure
+{
+  type:'map',
+  pointer:'list',
+  id:'sd897fs897f89sgh',
+  optimize:true,
+  markers:[
+    {
+      file_name:'sdf87897fsdfsdfs345',
+      range:{
+        start:0,
+        end:1199
+      }
+    },
+    {
+      file_name:'klj54klj35klj6jkl56jk5',
+      range:{
+        start:1200,
+        end:2150
+      }
+    }
+  ]
+}
+
+//write request
+list worker will receive a request to save a id data and type of the list.
+this list will be checked to exist in the map if not the list will be registered in the map and marker file will be created.
+marker file will be requested from warehouse worker if this file crosses the file limit a new marker file will be created.
+the marker file will be ordered to append the data to the file by the warehouse worker.
+marker file meta data will be updated to the new positions.
+
+//list request
+list worker will receive a request with list id, limit, start position
+list meta data will be extracted from the list map and marker files will be identified which is to be read with next marker file will be identified
+warehouse will be ordered to read the specified lines until data limit is reached and this data will be served to the asker
+
+//remove request
+list worker will receive a request with list id and position to remove and the marker file will be identified.
+warehouse will be ordered to remove the item from the position in the marker file

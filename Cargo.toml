@@ -1,0 +1,2 @@
+[workspace]
+members = ["cert", "composer", "fdbWorkers", "files", "postoffice", "user", "list/test", "list/list", "warehouse/engine", "warehouse/try", "trycon/client", "trycon/server"]

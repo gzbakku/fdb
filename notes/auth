@@ -1,0 +1,22 @@
+
+
+// start db
+composer will get started with master password and decrypt the base password
+all existing nodes will be checked with there signature hash to match base password signature hash
+composer will start a auth server with auth api
+only nodes whos ip have been accepted will send there public key which will then be verified and will be sent a session token on authentication.
+
+//composer rank
+child composers will connect to the central composer and will be assigned ranks based on que they register in.
+with every new member composer all child composers will update there que list
+*** if master composer goes down child composers will check the que for next active composer and connect to it.
+
+// connect nodes
+nodes will send there public key to the central composer and receive a session token.
+nodes will start all the child workers defined in the node config with the session, port and machine id.
+nodes will start ping server and fdb messenger
+
+//connect workers
+workers will connect to the central composer with fdb messenger and list there types with ip address and ports
+workers will listen to update command and will update there peer list with every command.
+workers can now connect to there peers.

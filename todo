@@ -1,0 +1,23 @@
+
+//urgent
+
+fix the collection system in postoffice to remove from controller only on flush and remove all the reset functionality.
+
+//after
+
+
+make backup worker          //pending
+make warehouse worker       //pending
+make files worker           //in progress
+
+make list worker            //pending
+make map worker             //pending
+
+make dict worker            //pending
+make index worker           //pending
+make book worker            //pending
+
+make runner worker          //pending
+
+make composer               //pending
+make node                   //pending

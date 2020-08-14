@@ -26,7 +26,7 @@ fn connect(data:json::JsonValue){
 
     match client::start_connection(&connection_id,addr,key) {
         Ok(_)=>{
-            for _ in 0..20 {
+            for _ in 0..1 {
                 send(connection_id.clone(),data.clone());
             }
         },

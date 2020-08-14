@@ -47,7 +47,7 @@ pub fn line(line:String) -> Result<JsonValue,String> {
 fn validate_request_object(body:&JsonValue) -> Result<(),String> {
 
     let new_format = Format::builder(vec![
-        Field::new("string",false,"type",vec!["write","read","collection_check","collection_insert"],Field::no_format(),0,0,false),
+        Field::new("string",false,"type",vec!["write","read"],Field::no_format(),0,0,false),
         Field::new("object",false,"data",Field::no_options(),Field::no_format(),0,0,false)
     ]);
 
@@ -62,10 +62,10 @@ fn validate_request_object(body:&JsonValue) -> Result<(),String> {
     let child_format = Format::builder(vec![
         Field::new("string",false,"id",Field::no_options(),Field::no_format(),0,0,false),
         Field::new("string",false,"path",Field::no_options(),Field::no_format(),0,0,false),
-        Field::new("object",false,"files",Field::no_options(),Field::no_format(),0,100,true)
+        Field::new("array",false,"files",Field::no_options(),Field::no_format(),0,100,true)
     ]);
 
-    match check::check_children(&body["data"], "object".to_string(), Field::no_options(), child_format, false, false) {
+    match check::check_children(&body["data"], "object".to_string(), Field::no_options(), child_format, false, true) {
         Ok(_)=>{},
         Err(e)=>{
             let error = format!("check children failed error : {:?}",e);

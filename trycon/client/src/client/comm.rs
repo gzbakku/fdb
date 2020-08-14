@@ -94,7 +94,7 @@ pub fn parse(line:String,key:&String) -> Result<Response,String> {
     } else if one == "OK" {
         if parts == 2 {
             return Ok(Response {
-                result:false,
+                result:true,
                 req_id:vec[1].to_string(),
                 message:String::from("undefined"),
                 error:String::new(),
@@ -104,7 +104,7 @@ pub fn parse(line:String,key:&String) -> Result<Response,String> {
             match decode_body(vec[2].to_string(),key){
                 Ok(message)=>{
                     return Ok(Response {
-                        result:false,
+                        result:true,
                         req_id:vec[1].to_string(),
                         message:message,
                         error:String::new(),

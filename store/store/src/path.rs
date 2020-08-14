@@ -24,10 +24,19 @@ pub fn check(path:&JsonValue) -> bool {
          return false;
      }
      let vec = path.split("/").collect::<Vec<&str>>();
-     let cal = vec.len() % 2;
-     if cal > 1 {
+     if vec[0].len() == 0 {
          return false;
-     } else {
+     }
+     let len = vec.len();
+     if len == 1 {
          return true;
+     } else if len == 2 {
+         return false;
+     }
+     let cal = len % 2;
+     if cal >= 1 {
+         return true;
+     } else {
+         return false;
      }
  }

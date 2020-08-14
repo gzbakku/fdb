@@ -14,7 +14,7 @@ fn main(){
 
     let mut collect = Vec::new();
 
-    for _ in 0..100 {
+    for _ in 0..1 {
         collect.push(thread::spawn(move || {
             start();
         }));
@@ -48,6 +48,15 @@ fn start() {
         }
     }
 
+    if true{
+        println!("{:?}",&connection_id);
+        match send_test_message(&connection_id).join() {
+            Ok(_)=>{},
+            Err(_)=>{}
+        }
+        return;
+    }
+
     if false {
         thread::sleep(Duration::from_millis(100000));
         return;
@@ -77,7 +86,7 @@ fn send_test_message(id:&String) -> JoinHandle<()> {
         match send_message(&connection_id, message.clone(), false) {
             Ok(response)=>{
                 //println!("request successfull");
-                //println!("response final : {:#?}",response);
+                println!("response final : {:#?}",response);
             },
             Err(_)=>{
                 common::error("request-failed");
