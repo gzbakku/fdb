@@ -5,7 +5,7 @@ use std::{thread,time};
 fn main(){
 
     let this_dir = "d://workstation/expo/rust/fdb";
-    let base_dir = format!("{}/vault/",this_dir);
+    let base_dir = format!("{}/vault/postoffice/collector",this_dir);
     io::ensure_dir(&base_dir);
 
     // println!("{:?}",&base_dir);
@@ -26,7 +26,7 @@ fn main(){
     }
 
     writer_thread(start_from);
-    close_collector();
+    // close_collector();
     process_collections();
 
 }
