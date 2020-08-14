@@ -106,6 +106,29 @@ pub fn get(read:bool) -> Result<Collection,String> {
 
     let path = format!("{}/{}.fdbcs",&base_dir,&collection_name);
 
+    if !io::check_path(&path){
+        match CONTROL.lock() {
+            Ok(mut control)=>{
+                    if control.finished.len() > 0{
+                        control.finished.remove(0);
+                    }
+            },
+            Err(_)=>{
+                return Err("failed-lock_ACTIVE_mutex".to_string());
+            }
+        }
+        match set_collection_action("flush",collection_name) {
+            Ok(_)=>{
+                let error = format!("failed-absent_collection_file-reseting_collection");
+                return Err(error);
+            },
+            Err(e)=>{
+                let error = format!("failed-absent_collection_file_reset_with_flush=>{}",e);
+                return Err(error);
+            }
+        }
+    }
+
     let mut collect = Vec::new();
     if read {
         match io::read(&path) {
@@ -117,28 +140,6 @@ pub fn get(read:bool) -> Result<Collection,String> {
             },
             Err(e)=>{
                 //ensure file if not flush this File
-                if !io::check_path(&path){
-                    match CONTROL.lock() {
-                        Ok(mut control)=>{
-                                if control.finished.len() > 0{
-                                    control.finished.remove(0);
-                                }
-                        },
-                        Err(_)=>{
-                            return Err("failed-lock_ACTIVE_mutex".to_string());
-                        }
-                    }
-                    match set_collection_action("flush",collection_name) {
-                        Ok(_)=>{
-                            let error = format!("failed-absent_collection_file-reseting_collection");
-                            return Err(error);
-                        },
-                        Err(e)=>{
-                            let error = format!("failed-absent_collection_file_reset_with_flush=>{}",e);
-                            return Err(error);
-                        }
-                    }
-                }
                 let error = format!("failed-read_collection_file=>{}=>{}",&path,e);
                 return Err(error);
             }
