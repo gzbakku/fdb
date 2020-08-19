@@ -95,6 +95,15 @@ fn handler(req: Request) -> Result<Response,String> {
                 return Ok(resp::error(req,"failed-get_item".to_string()));
             }
         }
+    } else if act.func == "get_items"{
+        match worker::get::items::init(act){
+            Ok(data)=>{
+                return Ok(resp::data(req, data, false));
+            },
+            Err(_)=>{
+                return Ok(resp::error(req,"failed-get_items".to_string()));
+            }
+        }
     } else if act.func == "get_range"{
         match worker::get::range::init(act){
             Ok(data)=>{

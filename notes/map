@@ -1,0 +1,32 @@
+
+
+map controller
+
+master map have controllers for other maps
+
+{
+  sd89f7sd789f7sd89f7:{
+    type:'local',
+    data:{
+      map:{
+        fdsfhjkhjkhkjhjkhjkhwerfwe:'random data'
+      }
+    }
+
+  },
+  hj8h9j8h8j908098sdfsdfs:{
+    type:'global',
+    data:{
+      files:{
+        sadf8sd9f7sd89fsdfsdfsdf:{
+          from:089797gdf78gdf78g68df76g,
+          to:sad7wq38ehghjgejhg234rghghg
+        },
+        87fdg7897gfd87g89fd7g89d:{
+          from:jk234hjkhjk5hj4k3h5jh45345,
+          to:sd89789sd7fs8d7f897sdfsdf
+        }
+      }
+    }
+  }
+};

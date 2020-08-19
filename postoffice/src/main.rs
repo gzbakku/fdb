@@ -25,7 +25,7 @@ fn main(){
         collector::insert(&i.to_string()).unwrap();
     }
 
-    writer_thread(start_from);
+    // writer_thread(start_from);
     // close_collector();
     process_collections();
 

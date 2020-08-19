@@ -8,11 +8,14 @@ use std::time::Duration;
 use std::thread;
 use std::collections::HashMap;
 use base64::{encode};
+use json::{JsonValue,parse};
+use mio::{Events, Token, Waker, Poll};
 
 mod crypt;
 mod comm;
 pub mod common;
 mod auth;
+pub mod channel;
 
 //#[allow(dead_code)]
 
@@ -64,6 +67,17 @@ impl Response {
             request:req
         }
     }
+    #[allow(dead_code)]
+    pub fn parse_to_json(self) -> Result<JsonValue,&'static str>{
+        match parse(&self.message){
+            Ok(m)=>{
+                return Ok(m);
+            },
+            Err(_)=>{
+                return Err("failed-parse_str_to_json");
+            }
+        }
+    }
 }
 
 lazy_static! {
@@ -73,6 +87,237 @@ lazy_static! {
     static ref REQUESTS : Mutex<HashMap<String,Vec<Request>>> = Mutex::new(HashMap::new());
     static ref RESPONSES : Mutex<HashMap<String,Response>> = Mutex::new(HashMap::new());
     static ref TIMEOUT : Mutex<Vec<u8>> = Mutex::new(Vec::new());
+    static ref TRIGGERS : Mutex<HashMap<String,Waker>> = Mutex::new(HashMap::new());
+}
+
+pub fn send_message_sync(id_base:&String,message:String,secure:bool) -> Result<Response,&'static str> {
+
+    let id = id_base.clone();
+    let req_id: String = thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(32)
+        .collect();
+
+    let mut func = "SMPL";
+    let encoded:String;
+    if secure {
+        match KEYS.lock() {
+            Ok(keys)=>{
+                match keys.get(&id) {
+                    Some(key)=>{
+                        encoded = crypt::encode_encrypt_message(message.clone(),key.to_string());
+                    },
+                    None=>{
+                        return Err("failed-extract_key-from_KEYS_pool");
+                    }
+                }
+            },
+            Err(_)=>{
+                return Err("failed-lock-connection_keys");
+            }
+        }
+        func = "ECRT";
+    } else {
+        encoded = encode(&message);
+    }
+
+    let parsed = format!("{} {} {}\r\n",func,&req_id,encoded);
+    let request = Request {
+        req_id:req_id.clone(),
+        message:message.clone(),
+        parsed:parsed
+    };
+
+    match REQUESTS.lock() {
+        Ok(mut request_pool)=>{
+            if request_pool.contains_key(&id) == false {
+                request_pool.insert(id.clone(),Vec::new());
+            }
+            match request_pool.get_mut(&id) {
+                Some(connection_pool) => {
+                    connection_pool.push(request.clone());
+                },
+                None=>{
+                    return Err("failed-get-connection_id_pool");
+                }
+            }
+        },
+        Err(_)=>{
+            return Err("failed-lock-Requests");
+        }
+    }
+
+    //*********************************************
+    //make token
+
+    let mut poll:Poll;
+    match Poll::new(){
+        Ok(o)=>{
+            poll = o;
+        },
+        Err(e)=>{
+            return Err("failed-init-poll");
+        }
+    }
+
+    let mut events = Events::with_capacity(2);
+    const WAKE_TOKEN: Token = Token(10);
+
+    match Waker::new(poll.registry(), WAKE_TOKEN){
+        Ok(waker)=>{
+            match TRIGGERS.lock(){
+                Ok(mut lock)=>{
+                    match lock.insert(req_id.clone(),waker){
+                        Some(_)=>{},
+                        None=>{}
+                    }
+                },
+                Err(_)=>{
+                    return Err("failed-lock-triggers");
+                }
+            }
+        },
+        Err(_)=>{
+            return Err("failed-make-waker");
+        }
+    }
+
+    //poll the response
+
+    let mut index:u16 = 0;
+    loop {
+        match comm::poll_response(&req_id) {
+            Ok(mut response)=>{
+                response.request = request;
+                return Ok(response);
+            },
+            Err(_)=>{}
+        }
+        if index >= 5000 {
+            break;
+        } else {
+            index += 10;
+        }
+        thread::sleep(Duration::from_millis(30));
+    }
+
+    return Err("failed-poll-response");
+
+}
+
+pub async fn send_message_async(id_base:&String,message:String,secure:bool) -> Result<Response,&'static str> {
+
+    let id = id_base.clone();
+    let req_id: String = thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(32)
+        .collect();
+
+    let mut func = "SMPL";
+    let encoded:String;
+    if secure {
+        match KEYS.lock() {
+            Ok(keys)=>{
+                match keys.get(&id) {
+                    Some(key)=>{
+                        encoded = crypt::encode_encrypt_message(message.clone(),key.to_string());
+                    },
+                    None=>{
+                        return Err("failed-extract_key-from_KEYS_pool");
+                    }
+                }
+            },
+            Err(_)=>{
+                return Err("failed-lock-connection_keys");
+            }
+        }
+        func = "ECRT";
+    } else {
+        encoded = encode(&message);
+    }
+
+    let parsed = format!("{} {} {}\r\n",func,&req_id,encoded);
+    let request = Request {
+        req_id:req_id.clone(),
+        message:message.clone(),
+        parsed:parsed
+    };
+
+    match REQUESTS.lock() {
+        Ok(mut request_pool)=>{
+            if request_pool.contains_key(&id) == false {
+                request_pool.insert(id.clone(),Vec::new());
+            }
+            match request_pool.get_mut(&id) {
+                Some(connection_pool) => {
+                    connection_pool.push(request.clone());
+                },
+                None=>{
+                    return Err("failed-get-connection_id_pool");
+                }
+            }
+        },
+        Err(_)=>{
+            return Err("failed-lock-Requests");
+        }
+    }
+
+    //*********************************************
+    //make token
+
+    let mut poll:Poll;
+    match Poll::new(){
+        Ok(o)=>{
+            poll = o;
+        },
+        Err(e)=>{
+            return Err("failed-init-poll");
+        }
+    }
+
+    let mut events = Events::with_capacity(2);
+    const WAKE_TOKEN: Token = Token(10);
+
+    match Waker::new(poll.registry(), WAKE_TOKEN){
+        Ok(waker)=>{
+            match TRIGGERS.lock(){
+                Ok(mut lock)=>{
+                    match lock.insert(req_id.clone(),waker){
+                        Some(_)=>{},
+                        None=>{}
+                    }
+                },
+                Err(_)=>{
+                    return Err("failed-lock-triggers");
+                }
+            }
+        },
+        Err(_)=>{
+            return Err("failed-make-waker");
+        }
+    }
+
+    //poll the response
+
+    let mut index:u16 = 0;
+    loop {
+        match comm::poll_response(&req_id) {
+            Ok(mut response)=>{
+                response.request = request;
+                return Ok(response);
+            },
+            Err(_)=>{}
+        }
+        if index >= 5000 {
+            break;
+        } else {
+            index += 10;
+        }
+        thread::sleep(Duration::from_millis(30));
+    }
+
+    return Err("failed-poll-response");
+
 }
 
 pub fn send_message(id_base:&String,message:String,secure:bool) -> Result<Response,String> {
@@ -95,12 +340,12 @@ pub fn send_message(id_base:&String,message:String,secure:bool) -> Result<Respon
                             encoded = crypt::encode_encrypt_message(message.clone(),key.to_string());
                         },
                         None=>{
-                            return Err(common::error("failed-extract_key-from_KEYS_pool"));
+                            return Err("failed-extract_key-from_KEYS_pool");
                         }
                     }
                 },
                 Err(_)=>{
-                    return Err(common::error("failed-lock_KEYS_pool"));
+                    return Err("failed-lock-connection_keys");
                 }
             }
             func = "ECRT";
@@ -124,13 +369,52 @@ pub fn send_message(id_base:&String,message:String,secure:bool) -> Result<Respon
                     Some(connection_pool) => {
                         connection_pool.push(request.clone());
                     },
-                    None=>{}
+                    None=>{
+                        return Err("failed-get-connection_id_pool");
+                    }
                 }
             },
             Err(_)=>{
-                return Ok(Response::error(request,String::from("failled to insert request into mailbox")));
+                return Err("failed-lock-Requests");
             }
         }
+
+        //*********************************************
+        //make token
+
+        let mut poll:Poll;
+        match Poll::new(){
+            Ok(o)=>{
+                poll = o;
+            },
+            Err(e)=>{
+                return Err("failed-init-poll");
+            }
+        }
+
+        let mut events = Events::with_capacity(2);
+        const WAKE_TOKEN: Token = Token(10);
+
+        match Waker::new(poll.registry(), WAKE_TOKEN){
+            Ok(waker)=>{
+                match TRIGGERS.lock(){
+                    Ok(mut lock)=>{
+                        match lock.insert(req_id.clone(),waker){
+                            Some(_)=>{},
+                            None=>{}
+                        }
+                    },
+                    Err(_)=>{
+                        return Err("failed-lock-triggers");
+                    }
+                }
+            },
+            Err(_)=>{
+                return Err("failed-make-waker");
+            }
+        }
+
+        //poll the response
 
         let mut index:u16 = 0;
         loop {
@@ -149,7 +433,7 @@ pub fn send_message(id_base:&String,message:String,secure:bool) -> Result<Respon
             thread::sleep(Duration::from_millis(30));
         }
 
-        return Err("timeout".to_string());
+        return Err("failed-poll-response");
 
     });
 
@@ -366,17 +650,36 @@ fn process_response(line:String,key:&String){
         Ok(response)=>{
             match RESPONSES.lock() {
                 Ok(mut pool)=>{
+                    match TRIGGERS.lock(){
+                        Ok(mut lock)=>{
+                            match lock.get_mut(&response.req_id){
+                                Some(waker)=>{
+                                    waker.wake();
+                                    match lock.remove(&response.req_id){
+                                        Some(_)=>{},
+                                        None=>{}
+                                    }
+                                },
+                                None=>{
+                                    common::error("failed-");
+                                }
+                            }
+                        },
+                        Err(_)=>{
+                            common::error("failed-lock-triggers-parse_response-client-postoffice");
+                        }
+                    }
                     pool.insert(response.req_id.clone(),response);
                 },
                 Err(_)=>{
-                    common::error("failed to get RESPONSES lock");
+                    common::error("failed-lock-responses-parse_response-client-postoffice");
                 }
             }
         },
         Err(e)=>{
             println!("!!! line : {:?}",line);
             println!("!!! error : {:?}",e);
-            common::error("failed-process_response-parse_incoming_message");
+            common::error("failed-process_response--parse_response-client-postoffice");
         }
     }
 }

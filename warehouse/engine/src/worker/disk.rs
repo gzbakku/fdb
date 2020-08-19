@@ -234,7 +234,7 @@ pub fn get_base_dir() -> Result<String,&'static str>{
 
 #[derive(Debug,Clone)]
 pub struct FdbMap{
-    pub map:HashMap<u128,String>
+    pub map:HashMap<String,String>
 }
 
 pub fn parse_map(w:&Writer) -> Result<FdbMap,&'static str>{
@@ -271,7 +271,7 @@ pub fn parse_map(w:&Writer) -> Result<FdbMap,&'static str>{
 pub fn parse_map_str(raw:&String) -> Result<FdbMap,&'static str> {
 
     let lines = raw.split("||--||").collect::<Vec<&str>>();
-    let mut map:HashMap<u128,String> = HashMap::new();
+    let mut map:HashMap<String,String> = HashMap::new();
 
     for line in lines{
         if line.len() > 0 {
@@ -282,16 +282,9 @@ pub fn parse_map_str(raw:&String) -> Result<FdbMap,&'static str> {
                 if line_vec.len() != 2{
                     return Err("invalid_data-seprator_error-parse_lines-parse_map_str-disk-writer");
                 }
-                match line_vec[0].parse::<u128>(){
-                    Ok(v)=>{
-                        match map.insert(v,line_vec[1].to_string()){
-                            Some(_)=>{},
-                            None=>{}
-                        }
-                    },
-                    Err(_)=>{
-                        return Err("failed-parse_index-parse_map_str-disk-writer");
-                    }
+                match map.insert(line_vec[0].to_string(),line_vec[1].to_string()){
+                    Some(_)=>{},
+                    None=>{}
                 }
             }
         }

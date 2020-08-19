@@ -1,2 +1,2 @@
 [workspace]
-members = ["cert", "composer", "fdbWorkers", "files", "postoffice", "user", "list/test", "list/list", "warehouse/engine", "warehouse/try", "trycon/client", "trycon/server"]
+members = ["task","cert", "composer", "fdbWorkers", "files/engine", "files/try", "postoffice", "user", "list/test", "list/list", "warehouse/engine", "warehouse/try", "trycon/client", "trycon/server", "hashcode", "sync", "mem/mem", "mem/mem_storage", "mem/try"]

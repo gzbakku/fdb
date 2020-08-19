@@ -35,17 +35,13 @@ pub fn init(act:Act) -> Result<JsonValue,&'static str> {
     }
 
     let mut docs = JsonValue::new_object();
-    for key in map.map.keys(){
-        match map.map.get(&key.to_string()){
+
+    for item in act.items{
+        match map.map.get(&item){
             Some(v)=>{
-                match docs.insert(&key.to_string(),v.to_string()){
-                    Ok(_)=>{},
-                    Err(_)=>{}
-                }
+                docs.insert(&item.to_string(),v.to_string()).unwrap();
             },
-            None=>{
-                return Err("not_found");
-            }
+            None=>{}
         }
     }
 

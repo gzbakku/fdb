@@ -1,5 +1,5 @@
 [package]
-name = "try"
+name = "mem"
 version = "0.1.0"
 authors = ["gzbakku <gzbakku@gmail.com>"]
 edition = "2018"
@@ -8,6 +8,6 @@ edition = "2018"
 
 [dependencies]
 postoffice = { path = "../../postoffice" }
+lazy_static = "1.4.0"
 json = "0.12.4"
 futures = "0.3.5"
-tokio = "0.2.22"

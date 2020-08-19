@@ -23,3 +23,5 @@ lazy_static = "1.4.0"
 hmac = "0.7.1"
 sha2 = "0.8.1"
 json = "0.12.1"
+futures = "0.3.5"
+mio = {version="0.7.0",features=["os-poll"]}

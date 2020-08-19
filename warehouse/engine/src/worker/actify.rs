@@ -41,12 +41,12 @@ pub fn init(file:&FdbFile,map:&mut FdbMap) -> Result<String,&'static str>{
 
 }
 
-fn parse_map_to_str(m:&HashMap<u128,String>) -> Result<String,&'static str>{
+fn parse_map_to_str(m:&HashMap<String,String>) -> Result<String,&'static str>{
 
     let mut collect = String::new();
 
     for key in m.keys(){
-        match m.get(&key){
+        match m.get(&key.to_string()){
             Some(v)=>{
                 let this_line = format!("{}++==++{}||--||",key,v);
                 collect = format!("{}{}",collect,this_line);

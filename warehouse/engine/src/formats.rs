@@ -6,22 +6,12 @@ pub struct Act{
     pub func:String,
     pub file_name:String,
     pub file_type:String,
-    pub item_index:u128,
+    pub item_index:String,
     pub start_index:u128,
     pub end_index:u128,
     pub item_value:String,
+    pub items:Vec<String>
 }
-
-// pub fn validate(line:&String) -> bool{
-//     match parse_activity(&line){
-//         Ok(_)=>{
-//             return true;
-//         },
-//         Err(_)=>{
-//             return false;
-//         }
-//     }
-// }
 
 pub fn parse_activity(line:&String) -> Result<Act,&'static str> {
 
@@ -37,7 +27,7 @@ pub fn parse_activity(line:&String) -> Result<Act,&'static str> {
 
     match check(&parsed,Format::builder(vec![
         Field::new("string",false,"type",vec![
-        "add_item","delete_item","get_item","get_range",
+        "add_item","delete_item","get_item","get_items","get_range",
         "delete_file","check_file","get_file","add_file",
         "list_dir"
         ],Field::no_format(),0,0,false),
@@ -56,6 +46,8 @@ pub fn parse_activity(line:&String) -> Result<Act,&'static str> {
         format = item::delete();
     } else if parsed["type"] == "get_item"{
         format = item::get();
+    } else if parsed["type"] == "get_items"{
+        format = item::get_items();
     } else if parsed["type"] == "get_range"{
         format = item::get_range();
     } else if parsed["type"] == "add_file"{
@@ -112,7 +104,7 @@ pub fn parse_activity(line:&String) -> Result<Act,&'static str> {
         }
     }
 
-    let mut item_index:u128 = 0;
+    let mut item_index:String = "0".to_string();
     if
         parsed["type"] == "add_item" ||
         parsed["type"] == "get_item" ||
@@ -120,14 +112,7 @@ pub fn parse_activity(line:&String) -> Result<Act,&'static str> {
     {
         match parsed["data"]["item_index"].as_str(){
             Some(str)=>{
-                match str.parse::<u128>(){
-                    Ok(num)=>{
-                        item_index = num;
-                    },
-                    Err(_)=>{
-                        return Err("failed-parse-item_index");
-                    }
-                }
+                item_index = str.to_string();
             },
             None=>{
                 return Err("failed-extract-item_index");
@@ -188,6 +173,22 @@ pub fn parse_activity(line:&String) -> Result<Act,&'static str> {
         }
     }
 
+    let mut items:Vec<String> = Vec::new();
+    if
+        parsed["type"] == "get_items"
+    {
+        for item in parsed["data"]["items"].members(){
+            match item.as_str(){
+                Some(str)=>{
+                    items.push(str.to_string());
+                },
+                None=>{
+                    return Err("failed-extract-file_type");
+                }
+            }
+        }
+    }
+
     let build = Act{
         func:func,
         file_name:file_name,
@@ -195,7 +196,8 @@ pub fn parse_activity(line:&String) -> Result<Act,&'static str> {
         item_index:item_index,
         start_index:start_index,
         end_index:end_index,
-        item_value:item_value
+        item_value:item_value,
+        items:items
     };
 
     return Ok(build);
@@ -229,6 +231,14 @@ pub mod item{
             Field::new("string",false,"file_type",Field::no_options(),Field::no_format(),0,0,false),
             Field::new("string",false,"start_index",Field::no_options(),Field::no_format(),0,0,false),
             Field::new("string",false,"end_index",Field::no_options(),Field::no_format(),0,0,false)
+        ])
+    }
+
+    pub fn get_items() -> Format {
+        Format::builder(vec![
+            Field::new("string",false,"file_name",Field::no_options(),Field::no_format(),0,0,false),
+            Field::new("string",false,"file_type",Field::no_options(),Field::no_format(),0,0,false),
+            Field::new("array",false,"items",Field::no_options(),Field::no_format(),0,0,false),
         ])
     }
 
