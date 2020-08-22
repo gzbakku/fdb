@@ -9,7 +9,7 @@ use std::thread;
 use std::collections::HashMap;
 use base64::{encode};
 use json::{JsonValue,parse};
-use mio::{Events, Token, Waker, Poll};
+use mio::{/*Events,*/ Token, Waker, Poll};
 
 mod crypt;
 mod comm;
@@ -90,6 +90,7 @@ lazy_static! {
     static ref TRIGGERS : Mutex<HashMap<String,Waker>> = Mutex::new(HashMap::new());
 }
 
+#[allow(dead_code)]
 pub fn send_message_sync(id_base:&String,message:String,secure:bool) -> Result<Response,&'static str> {
 
     let id = id_base.clone();
@@ -150,17 +151,17 @@ pub fn send_message_sync(id_base:&String,message:String,secure:bool) -> Result<R
     //*********************************************
     //make token
 
-    let mut poll:Poll;
+    let poll:Poll;
     match Poll::new(){
         Ok(o)=>{
             poll = o;
         },
-        Err(e)=>{
+        Err(_)=>{
             return Err("failed-init-poll");
         }
     }
 
-    let mut events = Events::with_capacity(2);
+    // let events = Events::with_capacity(2);
     const WAKE_TOKEN: Token = Token(10);
 
     match Waker::new(poll.registry(), WAKE_TOKEN){
@@ -205,6 +206,7 @@ pub fn send_message_sync(id_base:&String,message:String,secure:bool) -> Result<R
 
 }
 
+#[allow(dead_code)]
 pub async fn send_message_async(id_base:&String,message:String,secure:bool) -> Result<Response,&'static str> {
 
     let id = id_base.clone();
@@ -265,17 +267,17 @@ pub async fn send_message_async(id_base:&String,message:String,secure:bool) -> R
     //*********************************************
     //make token
 
-    let mut poll:Poll;
+    let poll:Poll;
     match Poll::new(){
         Ok(o)=>{
             poll = o;
         },
-        Err(e)=>{
+        Err(_)=>{
             return Err("failed-init-poll");
         }
     }
 
-    let mut events = Events::with_capacity(2);
+    // let events = Events::with_capacity(2);
     const WAKE_TOKEN: Token = Token(10);
 
     match Waker::new(poll.registry(), WAKE_TOKEN){
@@ -320,6 +322,7 @@ pub async fn send_message_async(id_base:&String,message:String,secure:bool) -> R
 
 }
 
+#[allow(dead_code)]
 pub fn send_message(id_base:&String,message:String,secure:bool) -> Result<Response,String> {
 
     let id = id_base.clone();
@@ -382,17 +385,17 @@ pub fn send_message(id_base:&String,message:String,secure:bool) -> Result<Respon
         //*********************************************
         //make token
 
-        let mut poll:Poll;
+        let poll:Poll;
         match Poll::new(){
             Ok(o)=>{
                 poll = o;
             },
-            Err(e)=>{
+            Err(_)=>{
                 return Err("failed-init-poll");
             }
         }
 
-        let mut events = Events::with_capacity(2);
+        // let events = Events::with_capacity(2);
         const WAKE_TOKEN: Token = Token(10);
 
         match Waker::new(poll.registry(), WAKE_TOKEN){
@@ -654,14 +657,20 @@ fn process_response(line:String,key:&String){
                         Ok(mut lock)=>{
                             match lock.get_mut(&response.req_id){
                                 Some(waker)=>{
-                                    waker.wake();
-                                    match lock.remove(&response.req_id){
-                                        Some(_)=>{},
-                                        None=>{}
+                                    match waker.wake(){
+                                        Ok(_)=>{
+                                            match lock.remove(&response.req_id){
+                                                Some(_)=>{},
+                                                None=>{}
+                                            }
+                                        },
+                                        Err(_)=>{
+                                            common::error("failed-lock-triggers-parse_response-client-postoffice");
+                                        }
                                     }
                                 },
                                 None=>{
-                                    common::error("failed-");
+                                    common::error("failed-lock-triggers-parse_response-client-postoffice");
                                 }
                             }
                         },
