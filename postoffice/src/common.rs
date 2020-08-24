@@ -2,12 +2,19 @@ use rand::{thread_rng, Rng};
 use rand::distributions::Alphanumeric;
 
 #[allow(dead_code)]
-pub fn log(m:&str){
+pub fn log(m:&'static str){
     println!(">>> {}",m);
 }
 
 #[allow(dead_code)]
-pub fn error(e:&str) -> String {
+pub fn log_check(m:&'static str,b:&bool){
+    if b == &true{
+        println!(">>> {}",m);
+    }
+}
+
+#[allow(dead_code)]
+pub fn error(e:&'static str) -> String {
     let error = format!("!!! {}",e);
     println!("{}",&error);
     return error.to_string();

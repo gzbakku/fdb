@@ -1,35 +1,61 @@
+use postoffice::client;
+use postoffice::client::{start_connection,common,channel};
 
-use postoffice::client::{start_connection,get_random_connection_id,common,send_message};
+mod add;
+mod check;
+mod get;
+mod del;
+// mod list;
 
 fn main() {
 
-    let key = "0554ac53f239c96279a3cff5cb29b085".to_string();
-    let address = String::from("127.0.0.1:5201");
-    let connection_id = get_random_connection_id();
 
-    match start_connection(&connection_id,address,key) {
-        Ok(_)=>{
-            println!("connection established");
-        },
-        Err(_)=>{
-            common::error("failed start connection");
-        }
-    }
 
-    match send_message(&connection_id, "hello".to_string(), false){
-        Ok(r)=>{
-            match r.parse_to_json(){
-                Ok(json)=>{
-                    println!("{:?}",json);
-                },
-                Err(_)=>{
-                    println!("failed parse response to json");
-                }
+    if false{
+        let key = "8cfb30b34977529853bbe46afdbbd5ae".to_string();
+        let connection_id = client::get_random_connection_id();
+        let addr = "127.0.0.1:5200".to_string();
+        match start_connection(&connection_id,addr,key) {
+            Ok(_)=>{
+                println!("connection established");
+            },
+            Err(_)=>{
+                common::error("failed start connection");
             }
-        },
-        Err(e)=>{
-            println!("failed send messgae : {:?}",e);
         }
     }
+    if true{
+        add_member("one", "filer", "127.0.0.1:5711");        //filer
+        // add_member("one_filer", "filer", "127.0.0.1:5701");           //warehouse
+    }
 
+    if false{
+        add::init();
+    }
+    if false{
+        check::init();
+    }
+    if false{
+        get::init();
+    }
+    if true{
+        del::init();
+    }
+
+    // if false{
+    //     list::init(&connection_id);
+    // }
+
+}
+
+fn add_member(member_name:&'static str,channel_name:&'static str,address:&'static str){
+    match channel::add_member(
+        &channel_name.to_string(),
+        &member_name.to_string(),
+        &address.to_string(),
+        &"2dc6bb40e73417bba878d3c8e3e08780".to_string()
+    ){
+        Ok(_)=>{},
+        Err(_)=>{}
+    }
 }

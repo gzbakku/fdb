@@ -7,7 +7,7 @@ use futures::executor::block_on;
 pub fn init(channel_name:&String){
 
     let mut request = JsonValue::new_object();
-    request.insert("type","get").unwrap();
+    request.insert("type","check").unwrap();
 
     let mut data = JsonValue::new_object();
     data.insert("index",common::hash::md5(&"1".to_string())).unwrap();

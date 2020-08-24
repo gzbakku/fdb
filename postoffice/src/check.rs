@@ -354,7 +354,7 @@ pub fn check_data_type(data:&JsonValue,data_type:String) -> Result<(),String> {
             println!("data : {:?}",&data);
             return Err("invalid-data_type-array".to_string());
         }
-    } else if data_type == "boolean".to_string() {
+    } else if data_type == "boolean".to_string() || data_type == "bool".to_string() {
         if data.is_boolean() == false {
             return Err("invalid-data_type-boolean".to_string());
         }

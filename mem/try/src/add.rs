@@ -1,8 +1,10 @@
 use json::JsonValue;
 use postoffice::common;
 use postoffice::client::send_message;
+use postoffice::client::channel::{brodcast,send,send_to_member};
+use futures::executor::block_on;
 
-pub fn init(connection_id:&String){
+pub fn init(channel_name:&String){
 
     let mut request = JsonValue::new_object();
     request.insert("type","add").unwrap();
@@ -10,15 +12,32 @@ pub fn init(connection_id:&String){
     let mut data = JsonValue::new_object();
     data.insert("index",common::hash::md5(&"1".to_string())).unwrap();
     data.insert("value",make_data()).unwrap();
-    data.insert("dir","kola").unwrap();
 
     request.insert("data",data).unwrap();
 
-    process_request(&connection_id,&request.dump(),false);
+    for _ in 0..1{
+        process_brodcast(&channel_name,&request,false);
+    }
 
 }
 
-pub fn process_request(connection_id:&String,message:&String,secure:bool){
+fn process_brodcast(channel_name:&String,message:&JsonValue,secure:bool) -> Result<(),&'static str>{
+
+    let run = block_on(brodcast(&channel_name, message, secure));
+    match run{
+        Ok(resp)=>{
+            println!("{:?}",resp);
+            return Ok(());
+        },
+        Err(e)=>{
+            println!("failed brodcast message {:?}",e);
+            return Err("failed-send_round_robin");
+        }
+    }
+
+}
+
+pub fn process_request_simple(connection_id:&String,message:&String,secure:bool){
     match send_message(&connection_id, message.to_string(), secure){
         Ok(resp)=>{
             println!("{:?}",resp.message);

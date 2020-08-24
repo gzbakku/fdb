@@ -100,12 +100,16 @@ fn get_member(channel_name:&String) -> Result<Member,&'static str>{
                     if channel.members.len() == 1 || !channel.members.contains(&channel.last){
                         match channel.map.get(&channel.members[0]){
                             Some(v)=>{
+                                channel.last = channel.members[0].clone();
                                 return Ok(v.clone());
                             },
                             None=>{
                                 return Err("failed-get_member_from_map-get_member");
                             }
                         }
+                    }
+                    if channel.last.len() == 0{
+                        channel.last = channel.members[0].clone();
                     }
                     let mut next_member:String = String::new();
                     let mut select_member = false;
@@ -143,7 +147,7 @@ fn get_member(channel_name:&String) -> Result<Member,&'static str>{
     }
 }
 
-#[allow(dead_code)]
+#[derive(Clone, Debug)]
 pub struct ChannelResponse{
     pub name:String,
     pub data:JsonValue
@@ -253,7 +257,7 @@ async fn process_message_async(connection_id:&String,message:&String,secure:bool
 }
 
 #[allow(dead_code)]
-pub async fn brodcast(channel_name:&String,message:JsonValue,secure:bool)->Result<Vec<ChannelResponse>,&'static str>{
+pub async fn brodcast(channel_name:&String,message:&JsonValue,secure:bool)->Result<Vec<ChannelResponse>,&'static str>{
     let message_as_string = message.dump();
     match CHANNELS.lock(){
         Ok(mut lock)=>{

@@ -1,0 +1,16 @@
+
+data is saved in chunks in warehouse
+
+warehouse add items remove update update the whole file
+
+filer router the query to the right warehouse and round robins the data requests.
+
+index::value ===++===
+index::value
+
+
+        backup 
+
+        w     w       w         ww    www
+
+        f   f   ff    ff      fff   ffff

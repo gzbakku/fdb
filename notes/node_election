@@ -1,0 +1,41 @@
+
+
+there is no election in node system all nodes are the same and be started with a base db password string
+
+when a node is started they can expose there composer apis to all other actors in the constellation or fdb actors list.
+
+since all the nodes are same all the actors will be able to work even one a one or more nodes goes down since there is on master node.
+
+all nodes are configured with a json file
+
+{
+
+  base_dir:"d://workstation/expo/rust/fdb/data"
+  master_password:'f897sd8f97sd89f7sd89f7sd897f8sd9f',
+  master_password_salt:'sd89f7sd89f78sd9f7sd89f7sd89f7',
+  ip:"169.0.34.9",
+  id:"wd8f7sf8d97gf8978978977987897",
+  peers:[
+      "197.189.0.2",
+      "197.189.0.4",
+      "197.189.0.6",
+  ],
+  actors:[
+    {
+      'type':'warehouse',
+      id:'dsf78989sd7f8s9d7fssdfs',
+      port:'6787'
+    },
+    {
+      'type':'filer',
+      id:'dsf78989sd7f8s9d7fssdss',
+      port:'6788'
+    },
+    {
+      'type':'mem_storage',
+      id:'dsf78989sd7f8s9d7fssdds',
+      port:'6789'
+    },
+  ]
+
+};

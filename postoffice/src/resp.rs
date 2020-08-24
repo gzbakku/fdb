@@ -149,3 +149,24 @@ pub fn new_response(req:server::Request,data:JsonValue,secure:bool) -> server::R
         }
     }
 }
+
+#[allow(dead_code)]
+pub fn is_successfull(r:&JsonValue) -> bool{
+    if !r.has_key("result"){return false;}
+    if !r["result"].is_boolean(){return false;}
+    match r["result"].as_bool(){
+        Some(r)=>{
+            if !r{return false;} else {return true;}
+        },
+        None=>{
+            return false;
+        }
+    }
+}
+
+#[allow(dead_code)]
+pub fn with_data(r:&JsonValue) -> bool{
+    if !r.has_key("data"){return false;}
+    if !r["data"].is_object() && !r["data"].is_array(){return false;}
+    return true;
+}
